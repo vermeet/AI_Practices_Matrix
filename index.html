@@ -71,9 +71,10 @@
     <section id="about" class="card pad" style="margin-bottom:16px">
       <h2 style="margin:0 0 8px">How this tool works</h2>
       <ol style="margin:0;padding-left:20px">
-        <li>Review the assignment types in left hand column for the selected department - select a new department in the drop down</li>
+        <li>Select your department from the drop menu - the default assignment types will update</li>
+        <li>Review the assignment types in left hand column - make updates as needed</li>
         <li>Use the <strong>Add</strong> button to create new rows, <strong>change</strong> the assignment type in a row, or use the <strong>Delete</strong> button to remove a row</li>
-        <li>Drag <b>practices</b> from the practices palette on the right into "Can use AI" or "Must avoid AI" columns for each assignment.</li>
+        <li>Drag <b>practices</b> from the practices palette on the right into "<div style="color:#10b981">Can use AI</div>" or "<div style="color:#ef4444">Must avoid AI</div>" columns for each assignment.</li>
         <li>Use the same practice in multiple assignments as needed (e.g. brainstorming)</li>
         <li>Add custom practices to the palette as needed</li>
         <li>Remove a practice with the × button, or use the <strong>Clear</strong> button to clear an entire row.</li>
@@ -180,8 +181,8 @@
 
     // ---- Practices ----
     let practices = [
-      'Brainstorming','Topic exploration','Outlining','Thesis drafting','First draft generation','Revision / rewrite','Proofreading / grammar','Citation help','Research / sources','Summarizing readings','Problem hints (no solutions)','Worked example (similar problem)','Critique / feedback','Presentation slide starter','Study guide creation','Practice questions','Translation (light)','Fact-checking','Rubric self-check',
-      'Pseudocode drafting','Algorithm design','Code skeleton','Debugging guidance','Test plan creation','Wireframing','Prototype feedback','Accessibility check','System diagram','Sensor calibration plan','Control flow planning','Safety checklist'
+      'Brainstorming','Topic exploration','Outlining','Thesis drafting','First draft generation','Rewrite','Proofreading','Citation help','Research / sources','Summarize readings','Problem hints (no solutions)','Worked example (similar problem)','Critique / feedback','Presentation slide starter','Study guide creation','Practice questions','Translation (light)','Fact-checking','Rubric self-check',
+      'Pseudocode drafting','Debugging guidance','Wireframing','Prototype feedback','Accessibility check','Safety checklist','Image/Graphic generation', 'Image/Graphic editting'
     ].map(label => ({ id: uid('prc'), label }));
 
     // ---- Assignments (start with English defaults) ----
