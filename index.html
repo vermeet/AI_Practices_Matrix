@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Use Matrix Builder</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#ffffff;--muted:#6b7280;--border:#e5e7eb;--ink:#111827;--primary:#2563eb;--success:#10b981;--warning:#f59e0b;}
+    *{box-sizing:border-box} body{margin:0;font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--ink)}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width: 900px){.row{grid-template-columns:3fr 4fr 4fr 1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .pad{padding:16px}
+    h1{font-size:24px;margin:0 0 4px} p.muted{color:var(--muted);margin:0 0 12px}
+    .controls{display:flex;flex-wrap:wrap;gap:8px}
+    .btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:10px 14px;font-size:14px;cursor:pointer;transition:all 0.15s}
+    .btn:hover{background:#f9fafb} .btn:active{transform:translateY(1px)} .btn.primary{background:var(--primary);color:#fff;border-color:#1d4ed8}
+    .btn.primary:hover{background:#1d4ed8} .btn.danger{background:#ef4444;color:#fff;border-color:#dc2626}
+    .input{padding:10px 12px;border:1px solid var(--border);border-radius:12px;width:100%}
+    .select{padding:10px 12px;border:1px solid var(--border);border-radius:12px;width:100%;background:#fff}
+    .gridhead{display:grid;grid-template-columns:1fr;gap:12px;color:var(--muted);font-weight:600;font-size:12px;margin:6px 0}
+    @media (min-width: 900px){.gridhead{grid-template-columns:3fr 4fr 4fr 1fr}}
+    .drop{border:1px dashed var(--border);border-radius:14px;min-height:56px;padding:8px;background:#fafafa;transition:all 0.2s}
+    .drop.dragover{border-color:var(--primary);background:#eff6ff;box-shadow:0 0 0 2px rgba(37,99,235,0.1)}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;margin:4px 6px 0 0;box-shadow:0 1px 1px rgba(0,0,0,.04);transition:all 0.15s;font-size:14px}
+    .chip.palette-chip{font-size:12px;padding:4px 8px}
+    .chip[draggable="true"]{cursor:grab} .chip[draggable="true"]:active{cursor:grabbing} .chip .x{border:none;background:transparent;cursor:pointer;color:#6b7280;padding:0;font-size:16px;line-height:1}
+    .badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px;font-weight:600}
+    .badge.gray{background:#f3f4f6;color:#374151}
+    .gridhead-allow{color:#10b981;font-weight:700}
+    .gridhead-avoid{color:#ef4444;font-weight:700}
+    .flex{display:flex;gap:8px;align-items:center}
+    .grid{display:grid;gap:12px}
+    .palette{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:8px}
+    @media (min-width: 700px){.palette{grid-template-columns:repeat(4, minmax(0,1fr))}}
+    @media (min-width: 1000px){.palette{grid-template-columns:repeat(6, minmax(0,1fr))}}
+    .hint{color:var(--muted);font-size:13px}
+    .hidden{display:none}
+    .header-grid{display:grid;gap:12px;grid-template-columns:1fr}
+    @media (min-width: 900px){.header-grid{grid-template-columns:1fr 1fr 1fr}}
+    .summary{color:#111827;font-weight:600;font-size:14px}
+    .toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:12px 16px;border-radius:8px;z-index:9999;animation:slideIn 0.3s ease-out}
+    @keyframes slideIn{from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1}}
+    .unsaved-indicator{display:inline-flex;align-items:center;gap:6px;color:#ef4444;font-size:13px;font-weight:500}
+    .unsaved-indicator::before{content:'●';font-size:8px}
+    .section-divider{height:1px;background:var(--border);margin:24px 0}
+    .action-row{display:flex;gap:8px;flex-wrap:wrap}
+    @media (max-width: 600px){.action-row{flex-direction:column}}
+    @media (max-width: 600px){.input-with-btn{display:flex;gap:8px;flex-direction:column}}
+    @media (min-width: 601px){.input-with-btn{display:flex;gap:8px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="flex" style="justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div style="flex:1">
+        <h1>AI Use Matrix Builder</h1>
+        <p class="muted" style="margin-bottom:4px">Create a clear, shareable policy for AI use per assignment type.</p>
+        <div id="unsavedIndicator" class="hidden unsaved-indicator">Unsaved changes</div>
+      </div>
+      <div class="controls">
+        <button id="pdfBtn" class="btn primary">Export PDF</button>
+        <button id="csvBtn" class="btn primary">Export CSV</button>
+        <button id="resetBtn" class="btn">Reset</button>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:560px;margin-bottom:12px">
+      <button class="btn" onclick="document.getElementById('printable').scrollIntoView({behavior:'smooth'})">Matrix</button>
+      <button class="btn" onclick="document.getElementById('practices').scrollIntoView({behavior:'smooth'})">Practices</button>
+      <button class="btn" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">About</button>
+    </div>
+
+    <section id="about" class="card pad" style="margin-bottom:16px">
+      <h2 style="margin:0 0 8px">How this tool works</h2>
+      <ul style="margin:0;padding-left:20px">
+        <li>Drag <b>practices</b> from the palette into "Can use AI" or "Must avoid AI" columns for each assignment.</li>
+        <li>Edit assignment names inline; use the <i>Add</i> field to create new rows.</li>
+        <li>Add custom practices to the palette and drag to any assignment.</li>
+        <li>Remove a practice with the × button, or <i>Clear</i> an entire row.</li>
+        <li>Export PDF to print/share; Export/Import JSON to move presets between teachers.</li>
+      </ul>
+    </section>
+
+    <div id="printable" class="grid" style="gap:16px">
+      <section id="hdr" class="card pad">
+        <h2 style="margin:0 0 8px">Metadata</h2>
+        <div class="header-grid">
+          <div>
+            <div class="muted" style="margin-bottom:4px;font-size:12px">Level</div>
+            <div class="flex" role="group" aria-label="Level">
+              <label class="flex" style="gap:6px"><input type="radio" name="level" value="Middle School" checked> <span>Middle School</span></label>
+              <label class="flex" style="gap:6px"><input type="radio" name="level" value="Upper School"> <span>Upper School</span></label>
+            </div>
+          </div>
+          <div>
+            <div class="muted" style="margin-bottom:4px;font-size:12px">Scope</div>
+            <div class="flex" role="group" aria-label="Scope">
+              <label class="flex" style="gap:6px"><input type="radio" name="scope" value="department" checked> <span>Department</span></label>
+              <label class="flex" style="gap:6px"><input type="radio" name="scope" value="course"> <span>Course</span></label>
+            </div>
+          </div>
+          <div>
+            <div id="deptWrap">
+              <div class="muted" style="margin-bottom:4px;font-size:12px">Department</div>
+              <select id="deptSelect" class="select">
+                <option>English</option>
+                <option>Math</option>
+                <option>Science</option>
+                <option>Social Studies</option>
+                <option>Theology</option>
+                <option>Language</option>
+                <option>Arts</option>
+                <option>Computer Studies</option>
+              </select>
+            </div>
+            <div id="courseWrap" class="hidden">
+              <div class="muted" style="margin-bottom:4px;font-size:12px">Course name</div>
+              <input id="courseInput" class="input" placeholder="e.g., AP US History" />
+            </div>
+          </div>
+        </div>
+        <div id="hdrSummary" class="summary" style="margin-top:12px"></div>
+      </section>
+
+      <div style="display:grid;grid-template-columns:75% 1fr;gap:16px;align-items:start">
+        <section id="matrix" class="card pad">
+          <h2 style="margin:0 0 12px">Assignments</h2>
+          <div class="input-with-btn" style="margin-bottom:12px">
+            <input id="newAssignment" class="input" placeholder="Add a new assignment (e.g., Socratic seminar)" />
+            <button id="addAssignmentBtn" class="btn" style="white-space:nowrap">Add</button>
+          </div>
+          <div class="gridhead">
+            <div>Assignment type</div><div>Can use AI</div><div>Must avoid AI</div><div>Actions</div>
+          </div>
+          <div id="matrixBody" class="grid" style="gap:16px"></div>
+        </section>
+
+        <section id="practices" class="card pad" style="max-height:600px;overflow-y:auto">
+          <h2 style="margin:0 0 12px;font-size:16px">Practices</h2>
+          <div class="input-with-btn" style="margin-bottom:12px;flex-direction:column">
+            <input id="newPractice" class="input" placeholder="Add practice" style="font-size:12px;padding:8px" />
+            <button id="addPracticeBtn" class="btn" style="font-size:12px">Add</button>
+          </div>
+          <div id="palette" class="palette" style="grid-template-columns:1fr;gap:6px"></div>
+          <div id="paletteEmpty" class="hint" style="margin-top:12px;font-size:12px"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF libs -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <script>
+  (function(){
+    const uid = (p='id') => p + '_' + Math.random().toString(36).slice(2,9);
+
+    // ---- META (Header state) ----
+    let meta = { level: 'Middle School', scope: 'department', department: 'English', courseName: '' };
+
+    // ---- Department default assignments ----
+    const deptDefaults = {
+      'English': ['Analytical essay','Literary analysis','Poetry explication','Research paper','Presentation / speech'],
+      'Math': ['Problem set','Proof write-up','Modeling project','Data analysis report','Presentation / speech'],
+      'Science': ['Lab report','Research poster','Field notes summary','Design investigation','Presentation / speech'],
+      'Social Studies': ['DBQ essay','Primary source analysis','Position paper','Research project','Presentation / speech'],
+      'Theology': ['Reflection essay','Textual analysis','Socratic seminar prep','Research project','Presentation / speech'],
+      'Language': ['Composition','Translation exercise','Oral presentation','Reading journal','Cultural project'],
+      'Arts': ['Artist statement','Portfolio reflection','Project proposal','Critique write-up','Presentation / speech'],
+      'Computer Studies': ['Programming task','UI/UX design brief','Algorithm design write-up','Robotics build log','Engineering design report']
+    };
+
+    // ---- Practices ----
+    let practices = [
+      'Brainstorming','Topic exploration','Outlining','Thesis drafting','First draft generation','Revision / rewrite','Proofreading / grammar','Citation help','Research / sources','Summarizing readings','Problem hints (no solutions)','Worked example (similar problem)','Critique / feedback','Presentation slide starter','Study guide creation','Practice questions','Translation (light)','Fact-checking','Rubric self-check',
+      'Pseudocode drafting','Algorithm design','Code skeleton','Debugging guidance','Test plan creation','Wireframing','Prototype feedback','Accessibility check','System diagram','Sensor calibration plan','Control flow planning','Safety checklist'
+    ].map(label => ({ id: uid('prc'), label }));
+
+    // ---- Assignments (start with English defaults) ----
+    let assignments = deptDefaults[meta.department].map(name => ({ id: uid('asg'), name, allow: [], avoid: [] }));
+
+    // ---- Dirty tracking ----
+    let edited = false;
+    let summaryTimeout;
+
+    // ---- DOM refs ----
+    const dom = {
+      printable: document.getElementById('printable'),
+      palette: document.getElementById('palette'),
+      paletteEmpty: document.getElementById('paletteEmpty'),
+      newPractice: document.getElementById('newPractice'),
+      addPracticeBtn: document.getElementById('addPracticeBtn'),
+      newAssignment: document.getElementById('newAssignment'),
+      addAssignmentBtn: document.getElementById('addAssignmentBtn'),
+      matrixBody: document.getElementById('matrixBody'),
+      csvBtn: document.getElementById('csvBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      pdfBtn: document.getElementById('pdfBtn'),
+      levelRadios: document.querySelectorAll('input[name="level"]'),
+      scopeRadios: document.querySelectorAll('input[name="scope"]'),
+      deptWrap: document.getElementById('deptWrap'),
+      deptSelect: document.getElementById('deptSelect'),
+      courseWrap: document.getElementById('courseWrap'),
+      courseInput: document.getElementById('courseInput'),
+      hdrSummary: document.getElementById('hdrSummary'),
+      unsavedIndicator: document.getElementById('unsavedIndicator')
+    };
+
+    // ---- Utilities ----
+    function showToast(msg, duration = 3000){
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), duration);
+    }
+
+    function updateUnsavedIndicator(){
+      if(edited){
+        dom.unsavedIndicator.classList.remove('hidden');
+      } else {
+        dom.unsavedIndicator.classList.add('hidden');
+      }
+    }
+
+    function markEdited(){
+      edited = true;
+      updateUnsavedIndicator();
+    }
+
+    function confirm2(title, onConfirm){
+      const ok = confirm(title);
+      if(ok) onConfirm();
+      return ok;
+    }
+
+    // ---- Header wiring ----
+    function updateHeaderVisibility(){
+      if(meta.scope === 'department'){
+        dom.deptWrap.classList.remove('hidden');
+        dom.courseWrap.classList.add('hidden');
+      } else {
+        dom.deptWrap.classList.add('hidden');
+        dom.courseWrap.classList.remove('hidden');
+      }
+    }
+
+    function headerSummaryText(){
+      const right = meta.scope === 'department' ? meta.department : meta.courseName || '—';
+      return `${meta.level} • ${meta.scope === 'department' ? 'Department' : 'Course'}: ${right}`;
+    }
+
+    function renderHeaderSummary(){
+      dom.hdrSummary.textContent = headerSummaryText();
+    }
+
+    dom.levelRadios.forEach(r => r.addEventListener('change', e => {
+      if(e.target.checked){
+        meta.level = e.target.value;
+        markEdited();
+        renderHeaderSummary();
+      }
+    }));
+
+    dom.scopeRadios.forEach(r => r.addEventListener('change', e => {
+      if(e.target.checked){
+        meta.scope = e.target.value;
+        markEdited();
+        updateHeaderVisibility();
+        renderHeaderSummary();
+      }
+    }));
+
+    dom.deptSelect.addEventListener('change', e => {
+      const next = e.target.value;
+      if(meta.department === next) return;
+      confirm2(`Load default assignments for ${next}? This will replace the current matrix.`, () => {
+        meta.department = next;
+        loadDeptDefaults('replace');
+        renderHeaderSummary();
+      });
+      e.target.value = meta.department;
+    });
+
+    dom.courseInput.addEventListener('input', e => {
+      clearTimeout(summaryTimeout);
+      summaryTimeout = setTimeout(() => {
+        meta.courseName = e.target.value;
+        markEdited();
+        renderHeaderSummary();
+      }, 150);
+    });
+
+    function applyHeaderToControls(){
+      dom.levelRadios.forEach(r => r.checked = (r.value === meta.level));
+      dom.scopeRadios.forEach(r => r.checked = (r.value === meta.scope));
+      dom.deptSelect.value = meta.department;
+      dom.courseInput.value = meta.courseName;
+      updateHeaderVisibility();
+      renderHeaderSummary();
+    }
+
+    function loadDeptDefaults(mode='replace'){
+      const names = deptDefaults[meta.department] || [];
+      const rows = names.map(name => ({ id: uid('asg'), name, allow: [], avoid: [] }));
+      if(mode === 'replace') assignments = rows;
+      else assignments = [...assignments, ...rows];
+      edited = false;
+      updateUnsavedIndicator();
+      renderMatrix();
+    }
+
+    // ---- Palette ----
+    function renderPalette(){
+      dom.palette.innerHTML = '';
+      practices.forEach(p => {
+        const chip = makeChip(p.label);
+        chip.classList.add('palette-chip');
+        chip.dataset.practiceId = p.id;
+        chip.id = 'palette_' + p.id;
+        chip.draggable = true;
+        chip.addEventListener('dragstart', onDragStartPalette);
+        dom.palette.appendChild(chip);
+      });
+
+      if(practices.length === 0){
+        dom.paletteEmpty.textContent = 'No practices. Add one to get started.';
+      } else {
+        dom.paletteEmpty.textContent = '';
+      }
+    }
+
+    function makeChip(label, removable){
+      const el = document.createElement('span');
+      el.className = 'chip';
+      el.textContent = label;
+      if(removable){
+        const x = document.createElement('button');
+        x.className = 'x';
+        x.innerHTML = '&times;';
+        x.title = 'Remove';
+        x.addEventListener('click', e => {
+          e.stopPropagation();
+          removable();
+          markEdited();
+        });
+        el.appendChild(x);
+      }
+      return el;
+    }
+
+    // ---- Matrix ----
+    function renderMatrix(){
+      dom.matrixBody.innerHTML = '';
+      assignments.forEach(a => {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        // Name cell
+        const nameCell = document.createElement('div');
+        const nameInput = document.createElement('input');
+        nameInput.className = 'input';
+        nameInput.value = a.name;
+        nameInput.placeholder = 'Assignment type';
+        nameInput.addEventListener('input', () => {
+          a.name = nameInput.value;
+          markEdited();
+        });
+        nameCell.appendChild(nameInput);
+
+        // Allow cell
+        const allowCell = document.createElement('div');
+        const allowBadge = document.createElement('div');
+        allowBadge.className = 'badge';
+        allowBadge.textContent = 'Can use AI';
+        const allowDrop = document.createElement('div');
+        allowDrop.className = 'drop';
+        allowDrop.id = `drop_${a.id}_allow`;
+        allowDrop.addEventListener('dragover', onDragOver);
+        allowDrop.addEventListener('dragleave', onDragLeave);
+        allowDrop.addEventListener('drop', e => onDrop(e, a.id, 'allow'));
+        renderChipsInto(allowDrop, a, 'allow');
+        allowCell.appendChild(allowBadge);
+        allowCell.appendChild(allowDrop);
+
+        // Avoid cell
+        const avoidCell = document.createElement('div');
+        const avoidBadge = document.createElement('div');
+        avoidBadge.className = 'badge gray';
+        avoidBadge.textContent = 'Must avoid AI';
+        const avoidDrop = document.createElement('div');
+        avoidDrop.className = 'drop';
+        avoidDrop.id = `drop_${a.id}_avoid`;
+        avoidDrop.addEventListener('dragover', onDragOver);
+        avoidDrop.addEventListener('dragleave', onDragLeave);
+        avoidDrop.addEventListener('drop', e => onDrop(e, a.id, 'avoid'));
+        renderChipsInto(avoidDrop, a, 'avoid');
+        avoidCell.appendChild(avoidBadge);
+        avoidCell.appendChild(avoidDrop);
+
+        // Actions
+        const actions = document.createElement('div');
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'btn';
+        clearBtn.textContent = 'Clear';
+        clearBtn.title = 'Clear all practices from this row';
+        clearBtn.onclick = () => {
+          a.allow = [];
+          a.avoid = [];
+          markEdited();
+          renderMatrix();
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn danger';
+        delBtn.textContent = 'Delete';
+        delBtn.title = 'Delete this assignment';
+        delBtn.onclick = () => {
+          confirm2(`Delete assignment "${a.name}"?`, () => {
+            assignments = assignments.filter(x => x.id !== a.id);
+            markEdited();
+            renderMatrix();
+          });
+        };
+
+        actions.appendChild(clearBtn);
+        actions.appendChild(delBtn);
+
+        row.appendChild(nameCell);
+        row.appendChild(allowCell);
+        row.appendChild(avoidCell);
+        row.appendChild(actions);
+        dom.matrixBody.appendChild(row);
+      });
+    }
+
+    function renderChipsInto(container, assignment, column){
+      container.innerHTML = '';
+      const ids = assignment[column];
+      if(!ids.length){
+        const hint = document.createElement('div');
+        hint.className = 'hint';
+        hint.textContent = 'Drag practices here';
+        container.appendChild(hint);
+      }
+      ids.forEach(id => {
+        const p = practices.find(x => x.id === id);
+        if(!p) return;
+        const chip = makeChip(p.label, () => {
+          assignment[column] = assignment[column].filter(x => x !== id);
+          renderMatrix();
+        });
+        chip.draggable = true;
+        chip.id = `chip_${assignment.id}_${column}_${id}`;
+        chip.addEventListener('dragstart', e => onDragStartChip(e, assignment.id, column, id));
+        container.appendChild(chip);
+      });
+    }
+
+    // ---- Drag & Drop ----
+    function onDragStartPalette(e){
+      const practiceId = e.target.dataset.practiceId;
+      e.dataTransfer.setData('text/plain', JSON.stringify({ type:'palette', practiceId }));
+    }
+
+    function onDragStartChip(e, assignmentId, column, practiceId){
+      e.dataTransfer.setData('text/plain', JSON.stringify({ type:'chip', assignmentId, column, practiceId }));
+    }
+
+    function onDragOver(e){
+      e.preventDefault();
+      e.currentTarget.classList.add('dragover');
+    }
+
+    function onDragLeave(e){
+      e.currentTarget.classList.remove('dragover');
+    }
+
+    function onDrop(e, assignmentId, column){
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      try{
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if(data.type === 'palette'){
+          const pId = data.practiceId;
+          assignments = assignments.map(a => {
+            if(a.id !== assignmentId) return a;
+            const other = column === 'allow' ? 'avoid' : 'allow';
+            if(a[column].includes(pId)) return a;
+            return { ...a, [column]: [...a[column], pId], [other]: a[other].filter(x => x !== pId) };
+          });
+          markEdited();
+          renderMatrix();
+        } else if(data.type === 'chip'){
+          const { assignmentId: fromA, column: fromC, practiceId: pId } = data;
+          if(fromA === assignmentId && fromC === column) return;
+          assignments = assignments.map(a => {
+            if(a.id === fromA) a = { ...a, [fromC]: a[fromC].filter(x => x !== pId) };
+            if(a.id === assignmentId){
+              const other = column === 'allow' ? 'avoid' : 'allow';
+              const set = new Set(a[column]);
+              set.add(pId);
+              a = { ...a, [column]: Array.from(set), [other]: a[other].filter(x => x !== pId) };
+            }
+            return a;
+          });
+          markEdited();
+          renderMatrix();
+        }
+      }catch(err){ /* ignore */ }
+    }
+
+    // Auto-scroll while dragging near viewport edges
+    function onGlobalDragOver(e){
+      const threshold = 60;
+      const speed = 14;
+      if(e.clientY < threshold){
+        window.scrollBy({ top: -speed, behavior: 'auto' });
+      } else if(e.clientY > window.innerHeight - threshold){
+        window.scrollBy({ top: speed, behavior: 'auto' });
+      }
+    }
+
+    document.addEventListener('dragover', onGlobalDragOver);
+
+    // ---- Practice Actions ----
+    function addPractice(){
+      const label = dom.newPractice.value.trim();
+      if(!label) return;
+      if(practices.some(p => p.label.toLowerCase() === label.toLowerCase())){
+        showToast('This practice already exists');
+        return;
+      }
+      practices.push({ id: uid('prc'), label });
+      dom.newPractice.value = '';
+      dom.newPractice.focus();
+      markEdited();
+      renderPalette();
+    }
+
+    dom.addPracticeBtn.onclick = addPractice;
+    dom.newPractice.addEventListener('keydown', e => { if(e.key === 'Enter') addPractice(); });
+
+    // ---- Assignment Actions ----
+    function addAssignment(){
+      const name = dom.newAssignment.value.trim();
+      if(!name) return;
+      assignments.push({ id: uid('asg'), name, allow: [], avoid: [] });
+      dom.newAssignment.value = '';
+      dom.newAssignment.focus();
+      markEdited();
+      renderMatrix();
+    }
+
+    dom.addAssignmentBtn.onclick = addAssignment;
+    dom.newAssignment.addEventListener('keydown', e => { if(e.key === 'Enter') addAssignment(); });
+
+    // ---- CSV Export ----
+    dom.csvBtn.onclick = () => {
+      const rows = [];
+      
+      // Metadata rows
+      rows.push(['Level', meta.level]);
+      rows.push(['Scope', meta.scope === 'department' ? 'Department' : 'Course']);
+      const scopeValue = meta.scope === 'department' ? meta.department : meta.courseName;
+      rows.push([meta.scope === 'department' ? 'Department' : 'Course', scopeValue]);
+      rows.push([]); // Blank row for spacing
+      
+      // Header row
+      rows.push(['Assignment Type', 'Can use AI', 'Must avoid AI']);
+      
+      // Get practice labels by ID
+      const labelById = id => (practices.find(p => p.id === id) || { label: '' }).label;
+      
+      // Data rows
+      assignments.forEach(a => {
+        const allowLabels = a.allow.map(labelById).sort().join('; ');
+        const avoidLabels = a.avoid.map(labelById).sort().join('; ');
+        rows.push([a.name, allowLabels, avoidLabels]);
+      });
+      
+      // Convert to CSV
+      const csv = rows.map(row => 
+        row.map(cell => 
+          // Escape quotes and wrap in quotes if contains comma or newline
+          `"${cell.replace(/"/g, '""')}"`
+        ).join(',')
+      ).join('\n');
+      
+      // Download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ai-practices-matrix.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
+
+    dom.resetBtn.onclick = () => {
+      confirm2('Reset to defaults?', () => {
+        location.reload();
+      });
+    };
+
+    // ---- PDF export ----
+    dom.pdfBtn.onclick = async () => {
+      const { jsPDF } = window.jspdf;
+      const exportRoot = document.createElement('div');
+      exportRoot.style.padding = '16px';
+      exportRoot.style.background = '#ffffff';
+      exportRoot.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+      exportRoot.style.color = '#111827';
+      exportRoot.style.maxWidth = '1200px';
+
+      const cap = document.createElement('div');
+      cap.textContent = `${meta.level} • ${meta.scope === 'department' ? 'Department' : 'Course'}: ${meta.scope === 'department' ? meta.department : (meta.courseName || '—')}`;
+      cap.style.fontWeight = '700';
+      cap.style.margin = '0 0 8px';
+      exportRoot.appendChild(cap);
+
+      const head = document.createElement('div');
+      head.style.display = 'grid';
+      head.style.gridTemplateColumns = '3fr 4fr 4fr';
+      head.style.gap = '10px';
+      head.style.color = '#6b7280';
+      head.style.fontSize = '12px';
+      head.style.fontWeight = '700';
+      head.style.margin = '6px 0 8px';
+      ['Assignment type', 'Can use AI', 'Must avoid AI'].forEach(t => {
+        const d = document.createElement('div');
+        d.textContent = t;
+        head.appendChild(d);
+      });
+      exportRoot.appendChild(head);
+
+      const labelById = id => (practices.find(p => p.id === id) || { label: '' }).label;
+      const sortLabels = ids => ids.map(labelById).filter(Boolean).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+      const chipStyle = 'display:inline-block;margin:2px 6px 2px 0;padding:4px 8px;border:1px solid #e5e7eb;border-radius:999px;font-size:11px;line-height:1.2;';
+
+      assignments.forEach(a => {
+        const row = document.createElement('div');
+        row.style.display = 'grid';
+        row.style.gridTemplateColumns = '3fr 4fr 4fr';
+        row.style.gap = '10px';
+        row.style.marginBottom = '8px';
+
+        const name = document.createElement('div');
+        name.textContent = a.name;
+        name.style.fontWeight = '600';
+        name.style.padding = '6px 8px';
+        name.style.border = '1px solid #e5e7eb';
+        name.style.borderRadius = '10px';
+        row.appendChild(name);
+
+        const allow = document.createElement('div');
+        allow.style.border = '1px solid #e5e7eb';
+        allow.style.borderRadius = '10px';
+        allow.style.minHeight = '36px';
+        allow.style.padding = '6px 8px';
+        sortLabels(a.allow).forEach(lbl => {
+          const s = document.createElement('span');
+          s.setAttribute('style', chipStyle);
+          s.textContent = lbl;
+          allow.appendChild(s);
+        });
+        row.appendChild(allow);
+
+        const avoid = document.createElement('div');
+        avoid.style.border = '1px solid #e5e7eb';
+        avoid.style.borderRadius = '10px';
+        avoid.style.minHeight = '36px';
+        avoid.style.padding = '6px 8px';
+        sortLabels(a.avoid).forEach(lbl => {
+          const s = document.createElement('span');
+          s.setAttribute('style', chipStyle);
+          s.textContent = lbl;
+          avoid.appendChild(s);
+        });
+        row.appendChild(avoid);
+
+        exportRoot.appendChild(row);
+      });
+
+      exportRoot.style.position = 'fixed';
+      exportRoot.style.left = '-99999px';
+      exportRoot.style.top = '0';
+      document.body.appendChild(exportRoot);
+
+      const canvas = await html2canvas(exportRoot, { scale: 2, backgroundColor: '#ffffff' });
+
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxW = pw - margin * 2;
+      const maxH = ph - margin * 2;
+      const ratioW = maxW / canvas.width;
+      const ratioH = maxH / canvas.height;
+      const ratio = Math.min(ratioW, ratioH);
+      const imgW = canvas.width * ratio;
+      const imgH = canvas.height * ratio;
+      const x = (pw - imgW) / 2;
+      const y = (ph - imgH) / 2;
+      const img = canvas.toDataURL('image/png');
+      pdf.addImage(img, 'PNG', x, y, imgW, imgH);
+      pdf.save('AI_Practices_Matrix.pdf');
+
+      document.body.removeChild(exportRoot);
+    };
+
+    // ---- Warn on unsaved changes before leaving ----
+    window.addEventListener('beforeunload', e => {
+      if(edited){
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // ---- Initial render ----
+    function boot(){
+      applyHeaderToControls();
+      renderPalette();
+      renderMatrix();
+      renderHeaderSummary();
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>
