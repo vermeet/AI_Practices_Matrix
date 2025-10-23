@@ -1,922 +1,1209 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI Use Matrix Builder</title>
-  <style>
-    :root{--bg:#f6f7fb;--card:#ffffff;--muted:#6b7280;--border:#e5e7eb;--ink:#111827;--primary:#2563eb;--success:#10b981;--warning:#f59e0b;}
-    *{box-sizing:border-box} body{margin:0;font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--ink)}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    .row{display:grid;grid-template-columns:1fr;gap:12px}
-    @media (min-width: 900px){.row{grid-template-columns:3fr 4fr 4fr 1fr}}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-    .pad{padding:16px}
-    h1{font-size:24px;margin:0 0 4px} p.muted{color:var(--muted);margin:0 0 12px}
-    .controls{display:flex;flex-wrap:wrap;gap:8px}
-    .btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:7px 10px;margin:2px 0;font-size:14px;cursor:pointer;transition:all 0.15s}
-    .btn:hover{background:#f9fafb} .btn:active{transform:translateY(1px)} .btn.primary{background:var(--primary);color:#fff;border-color:#1d4ed8}
-    .btn.primary:hover{background:#1d4ed8} .btn.danger{background:#ef4444;color:#fff;border-color:#dc2626}
-    .input{padding:10px 12px;border:1px solid var(--border);border-radius:12px;width:100%}
-    .select{padding:10px 12px;border:1px solid var(--border);border-radius:12px;width:100%;background:#fff}
-    .gridhead{display:grid;grid-template-columns:1fr;gap:12px;color:var(--muted);font-weight:600;font-size:12px;margin:6px 0}
-    @media (min-width: 900px){.gridhead{grid-template-columns:3fr 4fr 4fr 1fr}}
-    .drop{border:1px dashed var(--border);border-radius:14px;min-height:56px;padding:8px;background:#fafafa;transition:all 0.2s}
-    .drop.dragover{border-color:var(--primary);background:#eff6ff;box-shadow:0 0 0 2px rgba(37,99,235,0.1)}
-    .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;margin:4px 6px 0 0;box-shadow:0 1px 1px rgba(0,0,0,.04);transition:all 0.15s;font-size:14px}
-    .chip.palette-chip{font-size:12px;padding:4px 8px}
-    .chip[draggable="true"]{cursor:grab} .chip[draggable="true"]:active{cursor:grabbing} .chip .x{border:none;background:transparent;cursor:pointer;color:#6b7280;padding:0;font-size:16px;line-height:1}
-    .badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px;font-weight:600}
-    .badge.gray{background:#f3f4f6;color:#374151}
-    .badge.green{background:#d1fae5;color:#065f46}
-    .badge.pink{background:#fce7f3;color:#be185d}
-    .gridhead-allow{color:#10b981;font-weight:700}
-    .gridhead-avoid{color:#ef4444;font-weight:700}
-    .flex{display:flex;gap:8px;align-items:center}
-    .grid{display:grid;gap:12px}
-    .palette{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:8px}
-    @media (min-width: 700px){.palette{grid-template-columns:repeat(4, minmax(0,1fr))}}
-    @media (min-width: 1000px){.palette{grid-template-columns:repeat(6, minmax(0,1fr))}}
-    .hint{color:var(--muted);font-size:13px}
-    .hidden{display:none}
-    .header-grid{display:grid;gap:12px;grid-template-columns:1fr}
-    @media (min-width: 900px){.header-grid{grid-template-columns:1fr 1fr 1fr}}
-    .checkbox-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
-    @media (min-width: 600px){.checkbox-grid{grid-template-columns:repeat(4,1fr)}}
-    .summary{color:#111827;font-weight:900;font-size:18px}
-    .toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:12px 16px;border-radius:8px;z-index:9999;animation:slideIn 0.3s ease-out}
-    @keyframes slideIn{from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1}}
-    .unsaved-indicator{display:inline-flex;align-items:center;gap:6px;color:#ef4444;font-size:13px;font-weight:500}
-    .unsaved-indicator::before{content:'●';font-size:8px}
-    .saved-indicator{display:inline-flex;align-items:center;gap:6px;color:#10b981;font-size:13px;font-weight:500}
-    .saved-indicator::before{content:'●';font-size:8px}
-    .section-divider{height:1px;background:var(--border);margin:24px 0}
-    .action-row{display:flex;gap:8px;flex-wrap:wrap}
-    @media (max-width: 600px){.action-row{flex-direction:column}}
-    @media (max-width: 600px){.input-with-btn{display:flex;gap:8px;flex-direction:column}}
-    @media (min-width: 601px){.input-with-btn{display:flex;gap:8px}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Should I Use AI? - Student Decision Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .question-container {
+            display: none;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .question-container.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .question {
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            padding: 18px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+            text-align: left;
+            color: #333;
+        }
+
+        .option-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .result {
+            display: none;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result.yes {
+            background: #d4edda;
+            border: 3px solid #28a745;
+        }
+
+        .result.no {
+            background: #f8d7da;
+            border: 3px solid #dc3545;
+        }
+
+        .result.maybe {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+        }
+
+        .result h2 {
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .result.yes h2 {
+            color: #28a745;
+        }
+
+        .result.no h2 {
+            color: #dc3545;
+        }
+
+        .result.maybe h2 {
+            color: #e67e00;
+        }
+
+        .result p {
+            line-height: 1.8;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .result ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .result li {
+            margin: 10px 0;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .restart-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .restart-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .info-box strong {
+            color: #1976D2;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .question {
+                font-size: 1.2em;
+            }
+
+            .option-btn {
+                font-size: 1em;
+                padding: 15px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="flex" style="justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-      <div style="flex:1">
-        <h1>AI Use Matrix Builder</h1>
-        <p class="muted" style="margin-bottom:4px">Create a clear, shareable policy for when student can use AI for your assignments. Export for a shareable document - it does not save online.</p>
-        <div id="unsavedIndicator" class="hidden unsaved-indicator">Changes not exported</div>
-      </div>
-      <div class="controls">
-        <button id="pdfBtn" class="btn primary">Export PDF</button>
-        <button id="csvBtn" class="btn primary">Export CSV</button>
-        <button id="resetBtn" class="btn">Reset</button>
-      </div>
-    </div>
-
-    <section id="about" class="card pad" style="margin-bottom:16px">
-      <h2 style="margin:0 0 8px">How this tool works</h2>
-      <ol style="margin:0;padding-left:20px">
-        <li>Select your department from the drop menu - the default assignment types will update</li>
-        <li>Review the assignment types in left hand column - make updates as needed</li>
-        <li>Use the <strong>Add</strong> button to create new rows, <strong>change</strong> the assignment type in a row, or use the <strong>Delete</strong> button to remove a row</li>
-        <li>Drag <b>practices</b> from the practices palette on the right into "<span style="color:#10b981">Can use AI</span>" or "<span style="color:#ef4444">Must avoid AI</span>" columns for each assignment.</li>
-        <li>Use the same practice in multiple assignments as needed (e.g. brainstorming)</li>
-        <li>Add custom practices to the palette as needed</li>
-        <li>Remove a practice with the × button, or use the <strong>Clear</strong> button to clear an entire row.</li>
-        <li><strong>Export</strong> to save your work! Export to PDF to print/share; Export to CSV to save the document</li>
-        <li>Use the <strong>Reset</strong> button to start over</li>
-      </ol>
-    </section>
-
-    <div id="printable" class="grid" style="gap:16px">
-      <section id="hdr" class="card pad">
-        <h2 style="margin:0 0 8px">AI Use Matrix - Header Info</h2>
-        <div class="header-grid">
-          <div>
-            <div class="muted" style="margin-bottom:4px;font-size:12px">Level</div>
-            <div class="flex" role="group" aria-label="Level">
-              <label class="flex" style="gap:6px"><input type="radio" name="level" value="Middle School" checked> <span>Middle School</span></label>
-              <label class="flex" style="gap:6px"><input type="radio" name="level" value="Upper School"> <span>Upper School</span></label>
-            </div>
-          </div>
-          <div>
-            <div class="muted" style="margin-bottom:4px;font-size:12px">Scope</div>
-            <div class="flex" role="group" aria-label="Scope">
-              <label class="flex" style="gap:6px"><input type="radio" name="scope" value="department" checked> <span>Department</span></label>
-              <label class="flex" style="gap:6px"><input type="radio" name="scope" value="course"> <span>Course</span></label>
-              <label class="flex" style="gap:6px"><input type="radio" name="scope" value="teacher"> <span>Teacher</span></label>
-            </div>
-          </div>
-          <div>
-            <div id="deptWrap">
-              <div class="muted" style="margin-bottom:4px;font-size:12px">Department</div>
-              <select id="deptSelect" class="select">
-                <!-- Options will be populated dynamically based on level -->
-              </select>
-            </div>
-            <div id="courseWrap" class="hidden">
-              <div class="muted" style="margin-bottom:4px;font-size:12px">Course name</div>
-              <input id="courseInput" class="input" placeholder="e.g., AP US History" />
-            </div>
-            <div id="teacherWrap" class="hidden">
-              <div class="muted" style="margin-bottom:4px;font-size:12px">Teacher name</div>
-              <input id="teacherInput" class="input" placeholder="e.g., Ms. Smith" />
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:12px">
-          <div class="muted" style="margin-bottom:4px;font-size:12px">Grade Levels</div>
-          <div id="gradeCheckboxes" class="checkbox-grid"></div>
-        </div>
-        <div id="hdrSummary" class="summary" style="margin-top:12px"></div>
-      </section>
-
-      <div style="display:grid;grid-template-columns:75% 1fr;gap:16px;align-items:start">
-        <section id="matrix" class="card pad">
-          <h2 style="margin:0 0 12px">Assignments</h2>
-          <div class="input-with-btn" style="margin-bottom:12px">
-            <input id="newAssignment" class="input" placeholder="Add a new assignment (e.g., Socratic seminar)" />
-            <button id="addAssignmentBtn" class="btn" style="white-space:nowrap">Add</button>
-          </div>
-          <div class="gridhead">
-            <div>Assignment type</div><div style="color:#10b981;font-weight:700">Can use AI</div><div style="color:#ef4444;font-weight:700">Must avoid AI</div><div>Actions</div>
-          </div>
-          <div id="matrixBody" class="grid" style="gap:16px"></div>
-        </section>
-
-        <section id="practices" class="card pad" style="max-height:600px;overflow-y:auto">
-          <h2 style="margin:0 0 12px;font-size:16px">Practices Palette</h2>
-          <div class="input-with-btn" style="margin-bottom:12px;flex-direction:column">
-            <input id="newPractice" class="input" placeholder="Add practice" style="font-size:12px;padding:8px" />
-            <button id="addPracticeBtn" class="btn" style="font-size:12px">Add</button>
-          </div>
-          <div id="palette" class="palette" style="grid-template-columns:1fr;gap:6px"></div>
-          <div id="paletteEmpty" class="hint" style="margin-top:12px;font-size:12px"></div>
-        </section>
-      </div>
-
-      <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:560px;margin-bottom:12px">
-      <button class="btn" onclick="document.getElementById('printable').scrollIntoView({behavior:'smooth'})">Matrix</button>
-      <button class="btn" onclick="document.getElementById('practices').scrollIntoView({behavior:'smooth'})">Practices</button>
-      <button class="btn" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">About</button>
-    </div>
-    </div>
-  </div>
-
-  <!-- PDF libs -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
-  <script>
-  (function(){
-    const uid = (p='id') => p + '_' + Math.random().toString(36).slice(2,9);
-
-    // ---- META (Header state) ----
-    let meta = { level: 'Middle School', scope: 'department', department: 'English', courseName: '', teacherName: '', grades: [] };
-
-    // ---- Department lists by level ----
-    const departmentsByLevel = {
-      'Middle School': ['Computer Studies', 'English', 'Fine Arts', 'Mathematics', 'Science', 'Social Studies', 'Theology', 'World Languages'],
-      'Upper School': ['Computer Studies', 'Elective', 'English', 'Fine Arts', 'Mathematics', 'Research Paper', 'Science', 'Social Studies', 'Theology', 'World Languages']
-    };
-
-    // ---- Department default assignments by level and department ----
-    const deptDefaults = {
-      'Middle School': {
-        'Computer Studies': ['Programming task','UI/UX design brief','Algorithm design write-up','Robotics build log','Engineering design report'],
-        'English': ['Analytical essay','Literary analysis','Poetry explication','Research paper','Presentation / speech'],
-        'Fine Arts': ['Artist statement','Portfolio reflection','Project proposal','Critique write-up','Presentation / speech'],
-        'Mathematics': ['Problem set','Proof write-up','Modeling project','Data analysis report','Presentation / speech'],
-        'Science': ['Lab report','Research poster','Field notes summary','Design investigation','Presentation / speech'],
-        'Social Studies': ['DBQ essay','Primary source analysis','Position paper','Research project','Presentation / speech'],
-        'Theology': ['Reflection essay','Textual analysis','Socratic seminar prep','Research project','Presentation / speech'],
-        'World Languages': ['Composition','Translation exercise','Oral presentation','Reading journal','Cultural project']
-      },
-      'Upper School': {
-        'Computer Studies': ['Programming task','Algorithm analysis','Software design document','Technical presentation','Code review report'],
-        'Elective': ['Project proposal','Research paper','Creative project','Presentation / speech','Reflection essay'],
-        'English': ['Analytical essay','Literary analysis','Research paper','Critical review','Presentation / speech'],
-        'Fine Arts': ['Artist statement','Portfolio reflection','Art critique','Exhibition proposal','Presentation / speech'],
-        'Mathematics': ['Problem set','Proof write-up','Mathematical modeling','Data analysis','Presentation / speech'],
-        'Research Paper': ['Topic proposal','Annotated bibliography','Literature review','Research draft','Final paper'],
-        'Science': ['Lab report','Research proposal','Scientific poster','Data analysis','Presentation / speech'],
-        'Social Studies': ['DBQ essay','Historical analysis','Position paper','Research project','Presentation / speech'],
-        'Theology': ['Theological reflection','Textual exegesis','Comparative analysis','Research project','Presentation / speech'],
-        'World Languages': ['Composition','Translation exercise','Oral presentation','Cultural analysis','Interpretive essay']
-      }
-    };
-
-    // ---- Practices ----
-    let practices = [
-      'Brainstorming','Topic exploration','Outlining','Thesis drafting','First draft generation','Rewrite','Proofreading','Citation help','Research / sources','Summarize readings','Problem hints (no solutions)','Worked example (similar problem)','Critique / feedback','Presentation slide starter','Study guide creation','Practice questions','Translation (light)','Fact-checking','Rubric self-check',
-      'Pseudocode drafting','Debugging guidance','Wireframing','Prototype feedback','Accessibility check','Safety checklist','Image/Graphic generation', 'Image/Graphic editting'
-    ].map(label => ({ id: uid('prc'), label }));
-
-    // ---- Assignments (start with Middle School English defaults) ----
-    let assignments = deptDefaults[meta.level][meta.department].map(name => ({ id: uid('asg'), name, allow: [], avoid: [] }));
-
-    // ---- Dirty tracking ----
-    let edited = false;
-    let everExported = false; // Track if user has ever exported
-    let summaryTimeout;
-
-    // ---- DOM refs ----
-    const dom = {
-      printable: document.getElementById('printable'),
-      palette: document.getElementById('palette'),
-      paletteEmpty: document.getElementById('paletteEmpty'),
-      newPractice: document.getElementById('newPractice'),
-      addPracticeBtn: document.getElementById('addPracticeBtn'),
-      newAssignment: document.getElementById('newAssignment'),
-      addAssignmentBtn: document.getElementById('addAssignmentBtn'),
-      matrixBody: document.getElementById('matrixBody'),
-      csvBtn: document.getElementById('csvBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      pdfBtn: document.getElementById('pdfBtn'),
-      levelRadios: document.querySelectorAll('input[name="level"]'),
-      scopeRadios: document.querySelectorAll('input[name="scope"]'),
-      deptWrap: document.getElementById('deptWrap'),
-      deptSelect: document.getElementById('deptSelect'),
-      courseWrap: document.getElementById('courseWrap'),
-      courseInput: document.getElementById('courseInput'),
-      teacherWrap: document.getElementById('teacherWrap'),
-      teacherInput: document.getElementById('teacherInput'),
-      hdrSummary: document.getElementById('hdrSummary'),
-      unsavedIndicator: document.getElementById('unsavedIndicator'),
-      gradeCheckboxes: document.getElementById('gradeCheckboxes')
-    };
-
-    // ---- Utilities ----
-    function showToast(msg, duration = 3000){
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), duration);
-    }
-
-    function updateUnsavedIndicator(){
-      if(edited){
-        dom.unsavedIndicator.className = 'unsaved-indicator';
-        dom.unsavedIndicator.textContent = 'Changes not exported';
-        dom.unsavedIndicator.classList.remove('hidden');
-      } else if(everExported){
-        dom.unsavedIndicator.className = 'saved-indicator';
-        dom.unsavedIndicator.textContent = 'Changes exported';
-        dom.unsavedIndicator.classList.remove('hidden');
-      } else {
-        dom.unsavedIndicator.classList.add('hidden');
-      }
-    }
-
-    function markEdited(){
-      edited = true;
-      updateUnsavedIndicator();
-    }
-    
-    function markExported(){
-      edited = false;
-      everExported = true;
-      updateUnsavedIndicator();
-    }
-
-    function confirm2(title, onConfirm){
-      const ok = confirm(title);
-      if(ok) onConfirm();
-      return ok;
-    }
-
-    // ---- Header wiring ----
-    function renderDepartmentOptions(){
-      const departments = departmentsByLevel[meta.level];
-      dom.deptSelect.innerHTML = '';
-      
-      departments.forEach(dept => {
-        const option = document.createElement('option');
-        option.value = dept;
-        option.textContent = dept;
-        option.selected = (dept === meta.department);
-        dom.deptSelect.appendChild(option);
-      });
-      
-      // If current department is not in the new level's list, select the first one
-      if(!departments.includes(meta.department)){
-        meta.department = departments[0];
-        dom.deptSelect.value = meta.department;
-      }
-    }
-    
-    function renderGradeCheckboxes(){
-      const grades = meta.level === 'Middle School' 
-        ? ['Grade 5', 'Grade 6', 'Grade 7', 'Grade 8']
-        : ['Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
-      
-      dom.gradeCheckboxes.innerHTML = '';
-      
-      grades.forEach(grade => {
-        const label = document.createElement('label');
-        label.className = 'flex';
-        label.style.gap = '6px';
-        label.style.fontSize = '14px';
+    <div class="container">
+        <h1>👩‍🎓 Should I Use AI? 🤖</h1>
+        <p class="subtitle">A Student's Guide to Making Smart Choices</p>
         
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.name = 'grade';
-        checkbox.value = grade;
-        checkbox.checked = meta.grades.includes(grade);
-        
-        checkbox.addEventListener('change', e => {
-          if(e.target.checked){
-            if(!meta.grades.includes(grade)){
-              meta.grades.push(grade);
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div id="questionArea"></div>
+        <div id="resultArea"></div>
+    </div>
+
+    <script>
+        // Decision tree structure
+        const decisionTree = {
+            start: {
+                question: "What type of assignment or task are you working on?",
+                options: [
+                    { text: "Writing assignment (essay, story, report)", next: "writing" },
+                    { text: "Research project or presentation", next: "research" },
+                    { text: "Math or problem-solving", next: "math" },
+                    { text: "Creative project (art, design, video)", next: "creative" },
+                    { text: "Studying or test preparation", next: "studying" },
+                    { text: "Coding or programming", next: "coding" }
+                ]
+            },
+            writing: {
+                question: "What stage of the writing process are you in?",
+                options: [
+                    { text: "Just starting - need to brainstorm ideas", next: "writing_brainstorm" },
+                    { text: "Have my ideas - writing the first draft", next: "writing_draft" },
+                    { text: "Revising and editing my work", next: "writing_edit" },
+                    { text: "Need help understanding the assignment", next: "writing_understanding" }
+                ]
+            },
+            writing_brainstorm: {
+                question: "Are you trying to generate your own original ideas or get help organizing thoughts you already have?",
+                options: [
+                    { text: "I want AI to give me the ideas", next: "result_no_writing_ideas" },
+                    { text: "I have ideas but need help organizing them", next: "result_yes_organize" },
+                    { text: "I want to bounce ideas off AI to develop my thinking", next: "result_yes_brainstorm" }
+                ]
+            },
+            writing_draft: {
+                question: "Has your teacher explicitly said you can use AI for drafting?",
+                options: [
+                    { text: "Yes, teacher approved AI use", next: "result_yes_approved" },
+                    { text: "No, not mentioned", next: "result_no_draft" },
+                    { text: "I'm not sure - I should ask", next: "result_ask_teacher" }
+                ]
+            },
+            writing_edit: {
+                question: "What kind of editing help do you need?",
+                options: [
+                    { text: "Grammar and spelling check", next: "result_yes_grammar" },
+                    { text: "Suggestions to improve my writing", next: "result_maybe_suggestions" },
+                    { text: "Rewriting sections for me", next: "result_no_rewrite" }
+                ]
+            },
+            writing_understanding: {
+                question: "Is this about understanding the assignment requirements or topic?",
+                options: [
+                    { text: "Understanding what the assignment is asking for", next: "result_yes_understand" },
+                    { text: "Learning about the topic I'm supposed to research myself", next: "result_maybe_topic" }
+                ]
+            },
+            research: {
+                question: "What part of your research are you working on?",
+                options: [
+                    { text: "Finding sources and information", next: "research_sources" },
+                    { text: "Understanding difficult concepts or sources", next: "research_understand" },
+                    { text: "Organizing my findings", next: "research_organize" },
+                    { text: "Creating the final presentation or paper", next: "research_final" }
+                ]
+            },
+            research_sources: {
+                question: "Are you trying to use AI to replace doing actual research?",
+                options: [
+                    { text: "Yes, I want AI to just tell me the information", next: "result_no_research" },
+                    { text: "No, I want help finding credible sources", next: "result_maybe_sources" },
+                    { text: "I want AI to help me understand how to search effectively", next: "result_yes_search_skills" }
+                ]
+            },
+            research_understand: {
+                question: "Is this a concept you're supposed to learn and understand yourself?",
+                options: [
+                    { text: "Yes, it's core to the learning objectives", next: "result_maybe_concept" },
+                    { text: "It's background knowledge I need to move forward", next: "result_yes_background" }
+                ]
+            },
+            research_organize: {
+                question: "Have you already done the research and gathered information?",
+                options: [
+                    { text: "Yes, I have my sources and notes", next: "result_yes_organize_research" },
+                    { text: "No, I want AI to do the research for me", next: "result_no_research" }
+                ]
+            },
+            research_final: {
+                question: "Are you creating the content yourself?",
+                options: [
+                    { text: "Yes, but I want help with design or formatting", next: "result_yes_design" },
+                    { text: "I want AI to write sections for me", next: "result_no_write_sections" }
+                ]
+            },
+            math: {
+                question: "What do you need help with in math?",
+                options: [
+                    { text: "Understanding a concept or method", next: "math_concept" },
+                    { text: "Checking my work", next: "math_check" },
+                    { text: "Solving problems for me", next: "result_no_solve" }
+                ]
+            },
+            math_concept: {
+                question: "Have you tried to understand it using your notes, textbook, or by asking your teacher?",
+                options: [
+                    { text: "Yes, but I still don't understand", next: "result_yes_math_tutor" },
+                    { text: "No, I want to go straight to AI", next: "result_maybe_try_first" }
+                ]
+            },
+            math_check: {
+                question: "Do you want AI to show you where you made mistakes so you can learn?",
+                options: [
+                    { text: "Yes, I want to understand my errors", next: "result_yes_check_learn" },
+                    { text: "I just want the right answer", next: "result_no_just_answer" }
+                ]
+            },
+            creative: {
+                question: "What's your role in this creative project?",
+                options: [
+                    { text: "I want to create original work", next: "creative_original" },
+                    { text: "I want to learn new techniques", next: "result_yes_techniques" },
+                    { text: "I want AI to create it for me", next: "result_no_create" }
+                ]
+            },
+            creative_original: {
+                question: "How do you plan to use AI?",
+                options: [
+                    { text: "As a tool to help implement my ideas", next: "result_yes_tool" },
+                    { text: "To generate ideas or content", next: "creative_generate" },
+                    { text: "For feedback on my work", next: "result_yes_feedback" }
+                ]
+            },
+            creative_generate: {
+                question: "Will you be adding your own creative input and transformation?",
+                options: [
+                    { text: "Yes, AI is just one source of inspiration", next: "result_maybe_inspiration" },
+                    { text: "No, I'll mainly use what AI creates", next: "result_no_mainly_ai" }
+                ]
+            },
+            studying: {
+                question: "How do you want to use AI for studying?",
+                options: [
+                    { text: "Create practice questions to test myself", next: "result_yes_practice" },
+                    { text: "Explain concepts I don't understand", next: "studying_explain" },
+                    { text: "Give me answers to study guide questions", next: "result_no_answers" }
+                ]
+            },
+            studying_explain: {
+                question: "Have you attempted to understand this from your class materials first?",
+                options: [
+                    { text: "Yes, I've tried but still confused", next: "result_yes_tutor" },
+                    { text: "No, but I learn better from AI", next: "result_maybe_materials_first" }
+                ]
+            },
+            coding: {
+                question: "What do you need help with in coding?",
+                options: [
+                    { text: "Understanding how code works", next: "result_yes_understand_code" },
+                    { text: "Debugging my own code", next: "result_yes_debug" },
+                    { text: "Writing code for me", next: "coding_write" },
+                    { text: "Learning new programming concepts", next: "result_yes_learn_code" }
+                ]
+            },
+            coding_write: {
+                question: "Is the purpose of this assignment to learn to code yourself?",
+                options: [
+                    { text: "Yes, I'm supposed to learn coding", next: "result_no_write_code" },
+                    { text: "No, coding is just a tool for another purpose", next: "result_maybe_code_tool" }
+                ]
             }
-          } else {
-            meta.grades = meta.grades.filter(g => g !== grade);
-          }
-          markEdited();
-          renderHeaderSummary();
-        });
-        
-        const span = document.createElement('span');
-        span.textContent = grade;
-        
-        label.appendChild(checkbox);
-        label.appendChild(span);
-        dom.gradeCheckboxes.appendChild(label);
-      });
-    }
-    
-    function updateHeaderVisibility(){
-      if(meta.scope === 'department'){
-        dom.deptWrap.classList.remove('hidden');
-        dom.courseWrap.classList.add('hidden');
-        dom.teacherWrap.classList.add('hidden');
-      } else if(meta.scope === 'course'){
-        dom.deptWrap.classList.add('hidden');
-        dom.courseWrap.classList.remove('hidden');
-        dom.teacherWrap.classList.add('hidden');
-      } else if(meta.scope === 'teacher'){
-        dom.deptWrap.classList.add('hidden');
-        dom.courseWrap.classList.add('hidden');
-        dom.teacherWrap.classList.remove('hidden');
-      }
-    }
-
-    function headerSummaryText(){
-      let right = '';
-      if(meta.scope === 'department'){
-        right = meta.department;
-      } else if(meta.scope === 'course'){
-        right = meta.courseName || '—';
-      } else if(meta.scope === 'teacher'){
-        right = meta.teacherName || '—';
-      }
-      const scopeLabel = meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher');
-      const gradeText = meta.grades.length > 0 ? ' • Grades: ' + meta.grades.join(', ') : '';
-      return `${meta.level} • ${scopeLabel}: ${right}${gradeText}`;
-    }
-
-    function renderHeaderSummary(){
-      dom.hdrSummary.textContent = headerSummaryText();
-    }
-
-    dom.levelRadios.forEach(r => r.addEventListener('change', e => {
-      if(e.target.checked){
-        const oldLevel = meta.level;
-        meta.level = e.target.value;
-        meta.grades = []; // Clear grades when level changes
-        
-        // Update department dropdown
-        renderDepartmentOptions();
-        
-        // Check if we should load new defaults for the department
-        const oldDept = meta.department;
-        const newDeptList = departmentsByLevel[meta.level];
-        
-        // If the department exists in new level, ask if they want to reload defaults
-        if(newDeptList.includes(oldDept)){
-          confirm2(`Level changed to ${meta.level}. Load default assignments for ${meta.department} at this level?`, () => {
-            loadDeptDefaults('replace');
-          });
-        } else {
-          // Department doesn't exist in new level, auto-load the first department's defaults
-          confirm2(`Level changed to ${meta.level}. Load default assignments for ${meta.department}?`, () => {
-            loadDeptDefaults('replace');
-          });
-        }
-        
-        markEdited();
-        renderGradeCheckboxes();
-        renderHeaderSummary();
-      }
-    }));
-
-    dom.scopeRadios.forEach(r => r.addEventListener('change', e => {
-      if(e.target.checked){
-        meta.scope = e.target.value;
-        markEdited();
-        updateHeaderVisibility();
-        renderHeaderSummary();
-      }
-    }));
-
-    dom.deptSelect.addEventListener('change', e => {
-      const next = e.target.value;
-      if(meta.department === next) return;
-      confirm2(`Load default assignments for ${next}? This will replace the current matrix.`, () => {
-        meta.department = next;
-        loadDeptDefaults('replace');
-        renderHeaderSummary();
-      });
-      e.target.value = meta.department;
-    });
-
-    dom.courseInput.addEventListener('input', e => {
-      clearTimeout(summaryTimeout);
-      summaryTimeout = setTimeout(() => {
-        meta.courseName = e.target.value;
-        markEdited();
-        renderHeaderSummary();
-      }, 150);
-    });
-
-    dom.teacherInput.addEventListener('input', e => {
-      clearTimeout(summaryTimeout);
-      summaryTimeout = setTimeout(() => {
-        meta.teacherName = e.target.value;
-        markEdited();
-        renderHeaderSummary();
-      }, 150);
-    });
-
-    function applyHeaderToControls(){
-      dom.levelRadios.forEach(r => r.checked = (r.value === meta.level));
-      dom.scopeRadios.forEach(r => r.checked = (r.value === meta.scope));
-      dom.deptSelect.value = meta.department;
-      dom.courseInput.value = meta.courseName;
-      dom.teacherInput.value = meta.teacherName;
-      updateHeaderVisibility();
-      renderHeaderSummary();
-    }
-
-    function loadDeptDefaults(mode='replace'){
-      const names = (deptDefaults[meta.level] && deptDefaults[meta.level][meta.department]) || [];
-      const rows = names.map(name => ({ id: uid('asg'), name, allow: [], avoid: [] }));
-      if(mode === 'replace') assignments = rows;
-      else assignments = [...assignments, ...rows];
-      edited = false;
-      updateUnsavedIndicator();
-      renderMatrix();
-    }
-
-    // ---- Palette ----
-    function renderPalette(){
-      dom.palette.innerHTML = '';
-      practices.forEach(p => {
-        const chip = makeChip(p.label);
-        chip.classList.add('palette-chip');
-        chip.dataset.practiceId = p.id;
-        chip.id = 'palette_' + p.id;
-        chip.draggable = true;
-        chip.addEventListener('dragstart', onDragStartPalette);
-        dom.palette.appendChild(chip);
-      });
-
-      if(practices.length === 0){
-        dom.paletteEmpty.textContent = 'No practices. Add one to get started.';
-      } else {
-        dom.paletteEmpty.textContent = '';
-      }
-    }
-
-    function makeChip(label, removable){
-      const el = document.createElement('span');
-      el.className = 'chip';
-      el.textContent = label;
-      if(removable){
-        const x = document.createElement('button');
-        x.className = 'x';
-        x.innerHTML = '&times;';
-        x.title = 'Remove';
-        x.addEventListener('click', e => {
-          e.stopPropagation();
-          removable();
-          markEdited();
-        });
-        el.appendChild(x);
-      }
-      return el;
-    }
-
-    // ---- Matrix ----
-    function renderMatrix(){
-      dom.matrixBody.innerHTML = '';
-      assignments.forEach(a => {
-        const row = document.createElement('div');
-        row.className = 'row';
-
-        // Name cell
-        const nameCell = document.createElement('div');
-        const nameInput = document.createElement('input');
-        nameInput.className = 'input';
-        nameInput.value = a.name;
-        nameInput.placeholder = 'Assignment type';
-        nameInput.addEventListener('input', () => {
-          a.name = nameInput.value;
-          markEdited();
-        });
-        nameCell.appendChild(nameInput);
-
-        // Allow cell
-        const allowCell = document.createElement('div');
-        const allowBadge = document.createElement('div');
-        allowBadge.className = 'badge green';
-        allowBadge.textContent = 'Can use AI';
-        const allowDrop = document.createElement('div');
-        allowDrop.className = 'drop';
-        allowDrop.id = `drop_${a.id}_allow`;
-        allowDrop.addEventListener('dragover', onDragOver);
-        allowDrop.addEventListener('dragleave', onDragLeave);
-        allowDrop.addEventListener('drop', e => onDrop(e, a.id, 'allow'));
-        renderChipsInto(allowDrop, a, 'allow');
-        allowCell.appendChild(allowBadge);
-        allowCell.appendChild(allowDrop);
-
-        // Avoid cell
-        const avoidCell = document.createElement('div');
-        const avoidBadge = document.createElement('div');
-        avoidBadge.className = 'badge pink';
-        avoidBadge.textContent = 'Must avoid AI';
-        const avoidDrop = document.createElement('div');
-        avoidDrop.className = 'drop';
-        avoidDrop.id = `drop_${a.id}_avoid`;
-        avoidDrop.addEventListener('dragover', onDragOver);
-        avoidDrop.addEventListener('dragleave', onDragLeave);
-        avoidDrop.addEventListener('drop', e => onDrop(e, a.id, 'avoid'));
-        renderChipsInto(avoidDrop, a, 'avoid');
-        avoidCell.appendChild(avoidBadge);
-        avoidCell.appendChild(avoidDrop);
-
-        // Actions
-        const actions = document.createElement('div');
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'btn';
-        clearBtn.textContent = 'Clear';
-        clearBtn.title = 'Clear all practices from this row';
-        clearBtn.onclick = () => {
-          a.allow = [];
-          a.avoid = [];
-          markEdited();
-          renderMatrix();
         };
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn danger';
-        delBtn.textContent = 'Delete';
-        delBtn.title = 'Delete this assignment';
-        delBtn.onclick = () => {
-          confirm2(`Delete assignment "${a.name}"?`, () => {
-            assignments = assignments.filter(x => x.id !== a.id);
-            markEdited();
-            renderMatrix();
-          });
+        // Result definitions
+        const results = {
+            result_no_writing_ideas: {
+                type: "no",
+                title: "❌ No - Don't Use AI",
+                content: `
+                    <p><strong>Generating your own ideas is a critical part of learning to write and think creatively.</strong></p>
+                    <p>Why this matters:</p>
+                    <ul>
+                        <li>Original thinking is one of the most important skills you're developing in school</li>
+                        <li>The struggle to come up with ideas strengthens your brain</li>
+                        <li>Your unique perspective and voice are what make your writing valuable</li>
+                        <li>Teachers can usually tell when ideas aren't authentically yours</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Instead, try this:</strong> Talk with classmates, brainstorm on paper, freewrite for 10 minutes, or ask your teacher for a brainstorming strategy. If you're really stuck, you can use AI to ask questions about the topic to spark your own thinking, but the ideas should come from you.
+                    </div>
+                `
+            },
+            result_yes_organize: {
+                type: "yes",
+                title: "✅ Yes - AI Can Help Here",
+                content: `
+                    <p><strong>Using AI to organize ideas you already have is a helpful way to structure your thinking.</strong></p>
+                    <p>How to use AI responsibly:</p>
+                    <ul>
+                        <li>Share your ideas with AI and ask for help creating an outline</li>
+                        <li>Use AI to suggest different ways to structure your argument</li>
+                        <li>Ask AI which of your ideas would work well as a thesis statement</li>
+                        <li>The ideas are yours - AI is just helping you arrange them effectively</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Pro tip:</strong> After AI suggests an organization, evaluate whether it makes sense for your specific assignment and audience. Don't blindly follow AI's structure - make it your own.
+                    </div>
+                `
+            },
+            result_yes_brainstorm: {
+                type: "yes",
+                title: "✅ Yes - Great Way to Use AI",
+                content: `
+                    <p><strong>Using AI as a brainstorming partner is an excellent way to develop your own thinking!</strong></p>
+                    <p>How to brainstorm effectively with AI:</p>
+                    <ul>
+                        <li>Share your initial ideas and ask AI to ask you questions that push your thinking deeper</li>
+                        <li>Ask "What if...?" questions to explore different angles</li>
+                        <li>Use AI to challenge your assumptions or offer counterarguments</li>
+                        <li>Remember: AI is helping you develop YOUR ideas, not replacing your thinking</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Important:</strong> Keep a record of your brainstorming process. Your teacher may want to see how you developed your ideas. Consider this part of your research and pre-writing process.
+                    </div>
+                `
+            },
+            result_yes_approved: {
+                type: "yes",
+                title: "✅ Yes - Teacher Approved",
+                content: `
+                    <p><strong>Since your teacher has explicitly approved AI use, you can proceed with confidence.</strong></p>
+                    <p>Still follow good practices:</p>
+                    <ul>
+                        <li>Follow any specific guidelines your teacher provided about AI use</li>
+                        <li>Document how you used AI (your teacher may want to know)</li>
+                        <li>Make sure your final work reflects your own understanding and voice</li>
+                        <li>If you're asked to cite AI use, be transparent about it</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Remember:</strong> Even with permission, your goal is learning. Don't let AI do all the thinking for you - use it as a tool to enhance your own work.
+                    </div>
+                `
+            },
+            result_no_draft: {
+                type: "no",
+                title: "❌ No - Don't Use AI to Draft",
+                content: `
+                    <p><strong>Unless your teacher specifically says it's okay, having AI write your draft is academic dishonesty.</strong></p>
+                    <p>Why this is important:</p>
+                    <ul>
+                        <li>The purpose of writing assignments is to develop YOUR writing skills</li>
+                        <li>You're submitting work as your own when it's not</li>
+                        <li>You miss out on the learning that comes from wrestling with expressing your ideas</li>
+                        <li>This could result in serious academic consequences</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>A better approach:</strong> Write your own draft first, even if it's rough. Then you can use AI in specific, limited ways for revision (like checking grammar or asking for feedback on clarity).
+                    </div>
+                `
+            },
+            result_ask_teacher: {
+                type: "maybe",
+                title: "⚠️ Ask Your Teacher First",
+                content: `
+                    <p><strong>When you're not sure, the best policy is to ask your teacher directly.</strong></p>
+                    <p>Questions to ask your teacher:</p>
+                    <ul>
+                        <li>"Is it okay to use AI tools for any part of this assignment?"</li>
+                        <li>"If I use AI, do I need to document it or cite it?"</li>
+                        <li>"What are the boundaries for AI use on this assignment?"</li>
+                        <li>"Can I use AI for brainstorming but not drafting?"</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Why ask?</strong> Teachers appreciate students who ask rather than guess. It shows maturity and integrity. Plus, you'll get a clear answer and won't risk accidentally violating policies.
+                    </div>
+                `
+            },
+            result_yes_grammar: {
+                type: "yes",
+                title: "✅ Yes - Grammar Tools Are Fine",
+                content: `
+                    <p><strong>Using AI for grammar, spelling, and punctuation is generally acceptable and similar to using spell-check.</strong></p>
+                    <p>How to use grammar help responsibly:</p>
+                    <ul>
+                        <li>Make sure the writing is yours before you check grammar</li>
+                        <li>Don't blindly accept every suggestion - understand why changes are recommended</li>
+                        <li>Use errors as learning opportunities to improve your writing skills</li>
+                        <li>Simple tools like Grammarly or built-in spell-check are usually fine</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Note:</strong> There's a difference between fixing typos and having AI rewrite sentences to sound more sophisticated. Stick to mechanical corrections, not style changes.
+                    </div>
+                `
+            },
+            result_maybe_suggestions: {
+                type: "maybe",
+                title: "⚠️ Be Careful - Ask Your Teacher",
+                content: `
+                    <p><strong>Getting suggestions for improving your writing is a gray area that depends on your teacher's policies.</strong></p>
+                    <p>Consider these questions:</p>
+                    <ul>
+                        <li>Are you asking for feedback on clarity and organization, or asking AI to rewrite things?</li>
+                        <li>Will you understand and implement suggestions yourself, or copy AI's revisions?</li>
+                        <li>Is your teacher trying to assess your current writing level, or your ability to revise?</li>
+                        <li>Could you get similar feedback from a peer, parent, or writing center?</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Safer approach:</strong> Ask your teacher if you can use AI for feedback, or seek human feedback first. If you do use AI, focus on understanding its suggestions rather than copying them word-for-word.
+                    </div>
+                `
+            },
+            result_no_rewrite: {
+                type: "no",
+                title: "❌ No - Write Your Own Words",
+                content: `
+                    <p><strong>Having AI rewrite sections of your paper means the final work isn't authentically yours.</strong></p>
+                    <p>Why you shouldn't do this:</p>
+                    <ul>
+                        <li>The assignment is designed to develop YOUR writing voice and skills</li>
+                        <li>You're not learning if someone (or something) else is doing the writing</li>
+                        <li>AI-rewritten text often doesn't sound like student writing</li>
+                        <li>This is considered academic dishonesty at most schools</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Instead, try this:</strong> If a section needs improvement, try rewriting it yourself. You can ask AI "What's unclear about this paragraph?" to identify issues, but the rewriting should be your own work.
+                    </div>
+                `
+            },
+            result_yes_understand: {
+                type: "yes",
+                title: "✅ Yes - Clarifying Assignments Is Fine",
+                content: `
+                    <p><strong>Using AI to understand what an assignment is asking for is a good use of technology as a learning tool.</strong></p>
+                    <p>How to use AI to clarify assignments:</p>
+                    <ul>
+                        <li>Copy the assignment prompt and ask AI to explain what it's asking for</li>
+                        <li>Ask AI to identify the key requirements or components</li>
+                        <li>Request clarification on confusing terminology</li>
+                        <li>Compare AI's explanation with your own interpretation</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Best practice:</strong> After using AI to understand the assignment, verify your understanding with your teacher. Sometimes AI might misinterpret specific instructions your teacher has given.
+                    </div>
+                `
+            },
+            result_maybe_topic: {
+                type: "maybe",
+                title: "⚠️ Depends on the Assignment",
+                content: `
+                    <p><strong>Using AI to learn about your research topic can be helpful, but be careful not to replace real research.</strong></p>
+                    <p>When it's appropriate:</p>
+                    <ul>
+                        <li>Getting background knowledge before diving into deeper research</li>
+                        <li>Understanding context to help you search for better sources</li>
+                        <li>Clarifying concepts you encounter in your actual sources</li>
+                    </ul>
+                    <p>When it's not appropriate:</p>
+                    <ul>
+                        <li>Using AI as your primary or only source of information</li>
+                        <li>When the assignment requires you to find and evaluate sources yourself</li>
+                        <li>If you're citing AI instead of doing actual research</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Warning:</strong> AI can provide inaccurate information (hallucinations) and can't replace credible sources. Always verify important information with reliable sources.
+                    </div>
+                `
+            },
+            result_no_research: {
+                type: "no",
+                title: "❌ No - Do Your Own Research",
+                content: `
+                    <p><strong>Having AI do your research defeats the entire purpose of a research assignment.</strong></p>
+                    <p>Why research skills matter:</p>
+                    <ul>
+                        <li>Learning to find credible sources is a critical life skill</li>
+                        <li>Research teaches you to evaluate information and think critically</li>
+                        <li>AI cannot replace peer-reviewed articles, primary sources, and expert analysis</li>
+                        <li>AI may provide inaccurate or biased information without proper sources</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>The right way:</strong> Use library databases, academic sources, and credible websites. Consult with your librarian. Learn to distinguish good sources from poor ones. This is one of the most valuable skills you'll learn in school.
+                    </div>
+                `
+            },
+            result_maybe_sources: {
+                type: "maybe",
+                title: "⚠️ Use with Caution",
+                content: `
+                    <p><strong>AI can suggest where to look for sources, but you must verify everything and do the actual research yourself.</strong></p>
+                    <p>How to use AI responsibly for source-finding:</p>
+                    <ul>
+                        <li>Ask AI to suggest types of sources or databases to explore</li>
+                        <li>Use AI to help formulate search terms or queries</li>
+                        <li>Never cite sources AI mentions without finding and reading them yourself</li>
+                        <li>Always verify that suggested sources actually exist and say what AI claims</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Important warning:</strong> AI often invents fake sources (hallucinations). Every source AI suggests must be verified by you. It's usually better to ask a librarian for help finding sources.
+                    </div>
+                `
+            },
+            result_yes_search_skills: {
+                type: "yes",
+                title: "✅ Yes - Learning Research Skills",
+                content: `
+                    <p><strong>Using AI as a research tutor to improve your search skills is an excellent use of the technology!</strong></p>
+                    <p>Ways AI can help you become a better researcher:</p>
+                    <ul>
+                        <li>Ask AI to explain how to use library databases effectively</li>
+                        <li>Get help creating Boolean search strings (AND, OR, NOT)</li>
+                        <li>Learn how to identify credible vs. non-credible sources</li>
+                        <li>Understand how to evaluate bias in sources</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Remember:</strong> The goal is to make YOU a better researcher, not to have AI research for you. Apply what you learn to find your own sources.
+                    </div>
+                `
+            },
+            result_maybe_concept: {
+                type: "maybe",
+                title: "⚠️ Try Other Resources First",
+                content: `
+                    <p><strong>If understanding a concept is core to your learning, you should try traditional learning methods first.</strong></p>
+                    <p>Try these steps before using AI:</p>
+                    <ul>
+                        <li>Re-read your textbook or class materials carefully</li>
+                        <li>Review your class notes and any examples provided</li>
+                        <li>Ask your teacher for clarification or extra help</li>
+                        <li>Form a study group with classmates</li>
+                    </ul>
+                    <p>When you can use AI:</p>
+                    <ul>
+                        <li>After you've genuinely tried to understand on your own</li>
+                        <li>To get an alternative explanation when traditional methods haven't clicked</li>
+                        <li>To provide additional examples that help you see patterns</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Key principle:</strong> AI should supplement your learning, not replace the struggle that leads to understanding. That struggle is where real learning happens.
+                    </div>
+                `
+            },
+            result_yes_background: {
+                type: "yes",
+                title: "✅ Yes - Background Knowledge Is Fine",
+                content: `
+                    <p><strong>Using AI to understand background information so you can engage with more advanced material is appropriate.</strong></p>
+                    <p>Good ways to use AI for background knowledge:</p>
+                    <ul>
+                        <li>Getting definitions of unfamiliar terms you encounter</li>
+                        <li>Understanding historical context for a primary source</li>
+                        <li>Clarifying prerequisite concepts you need to understand new material</li>
+                        <li>Getting the "big picture" before diving into details</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Tip:</strong> Even for background knowledge, verify important facts with reliable sources. AI can give you a starting point, but don't assume everything it says is accurate.
+                    </div>
+                `
+            },
+            result_yes_organize_research: {
+                type: "yes",
+                title: "✅ Yes - Organizing Your Research",
+                content: `
+                    <p><strong>Since you've already done the research yourself, using AI to help organize your findings is appropriate.</strong></p>
+                    <p>How AI can help with organization:</p>
+                    <ul>
+                        <li>Suggest ways to structure your presentation or paper</li>
+                        <li>Help you identify themes or patterns in your research</li>
+                        <li>Recommend how to group related information</li>
+                        <li>Create an outline based on your findings</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Important:</strong> The research and ideas are yours - AI is just helping you present them effectively. Make sure the organization makes sense for YOUR specific argument and evidence.
+                    </div>
+                `
+            },
+            result_yes_design: {
+                type: "yes",
+                title: "✅ Yes - Design Help Is Appropriate",
+                content: `
+                    <p><strong>Using AI to help with design, formatting, or presentation polish is generally acceptable when the content is yours.</strong></p>
+                    <p>Ways AI can help with design:</p>
+                    <ul>
+                        <li>Suggest color schemes or layouts for presentations</li>
+                        <li>Help format documents or bibliographies correctly</li>
+                        <li>Recommend ways to visualize data</li>
+                        <li>Create simple graphics or diagrams from your specifications</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Remember:</strong> If you use AI-generated images or graphics, check with your teacher about whether you need to cite them. Some assignments may require original images only.
+                    </div>
+                `
+            },
+            result_no_write_sections: {
+                type: "no",
+                title: "❌ No - Write Your Own Content",
+                content: `
+                    <p><strong>Having AI write sections of your research paper or presentation is academic dishonesty.</strong></p>
+                    <p>Why this is problematic:</p>
+                    <ul>
+                        <li>The point of the assignment is to demonstrate YOUR understanding</li>
+                        <li>You're submitting someone else's work as your own</li>
+                        <li>You miss the learning that comes from synthesizing information in your own words</li>
+                        <li>Teachers can often detect AI-generated content</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>The right approach:</strong> Write your own content based on your research. You can ask AI for feedback on clarity or organization, but the writing must be authentically yours.
+                    </div>
+                `
+            },
+            result_yes_math_tutor: {
+                type: "yes",
+                title: "✅ Yes - AI as a Math Tutor",
+                content: `
+                    <p><strong>After trying to learn from your teacher and materials, using AI as an additional tutor is appropriate.</strong></p>
+                    <p>How to use AI effectively for math help:</p>
+                    <ul>
+                        <li>Ask AI to explain concepts in different ways until it clicks</li>
+                        <li>Request step-by-step explanations of example problems (not your homework)</li>
+                        <li>Ask "why" questions to understand the reasoning behind methods</li>
+                        <li>Have AI create similar practice problems so you can test your understanding</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Best practice:</strong> Focus on understanding the concept, not just getting answers. After AI explains something, try doing similar problems on your own to confirm you truly understand.
+                    </div>
+                `
+            },
+            result_maybe_try_first: {
+                type: "maybe",
+                title: "⚠️ Try Traditional Resources First",
+                content: `
+                    <p><strong>Going straight to AI without trying to learn from your class materials limits your development as a learner.</strong></p>
+                    <p>Why try other resources first:</p>
+                    <ul>
+                        <li>Your textbook and notes are specifically designed for your curriculum</li>
+                        <li>Your teacher can provide help tailored to what they taught</li>
+                        <li>Struggling with material first actually helps your brain learn better</li>
+                        <li>You develop problem-solving and persistence skills</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Suggestion:</strong> Spend at least 15-20 minutes genuinely trying to understand using your class resources. Ask your teacher for help during office hours. If you're still stuck after sincere effort, then AI can be a helpful supplement.
+                    </div>
+                `
+            },
+            result_yes_check_learn: {
+                type: "yes",
+                title: "✅ Yes - Learning from Mistakes",
+                content: `
+                    <p><strong>Using AI to help you understand your mistakes is an excellent learning strategy!</strong></p>
+                    <p>How to use AI for checking work:</p>
+                    <ul>
+                        <li>Ask AI to identify where your work has errors without giving you the answer</li>
+                        <li>Request explanations of why your approach was incorrect</li>
+                        <li>Have AI show you what you should have done and why</li>
+                        <li>Use the feedback to rework problems on your own</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Pro tip:</strong> After AI explains your error, try a similar problem completely on your own to make sure you've really learned from the mistake. Don't just move on to the next problem!
+                    </div>
+                `
+            },
+            result_no_just_answer: {
+                type: "no",
+                title: "❌ No - You're Not Learning",
+                content: `
+                    <p><strong>If you just want the right answer without understanding your mistakes, you're missing the entire point of homework.</strong></p>
+                    <p>Why this approach doesn't work:</p>
+                    <ul>
+                        <li>You won't understand the concept when it appears on a test</li>
+                        <li>Math builds on itself - gaps in understanding create bigger problems later</li>
+                        <li>You're training yourself to look for shortcuts instead of building skills</li>
+                        <li>Homework is practice, not just something to complete</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>What to do instead:</strong> Focus on understanding. Ask AI (or your teacher) to explain where you went wrong and why. Then redo the problem yourself. The goal is learning, not just completing assignments.
+                    </div>
+                `
+            },
+            result_no_solve: {
+                type: "no",
+                title: "❌ No - Don't Use AI to Solve Problems",
+                content: `
+                    <p><strong>Having AI solve your math problems for you is cheating and prevents you from learning.</strong></p>
+                    <p>Why this is a serious problem:</p>
+                    <ul>
+                        <li>You're not developing your own problem-solving skills</li>
+                        <li>You won't be able to do similar problems on tests</li>
+                        <li>Math concepts build on each other - you're creating gaps in your knowledge</li>
+                        <li>This is academic dishonesty that can have consequences</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>The right approach:</strong> If you're stuck, ask AI to explain the concept or method, not to solve your specific homework problems. Work through practice problems with AI, then do your actual homework yourself.
+                    </div>
+                `
+            },
+            result_yes_techniques: {
+                type: "yes",
+                title: "✅ Yes - Learning New Skills",
+                content: `
+                    <p><strong>Using AI to learn new creative techniques, tools, or methods is an excellent use of technology!</strong></p>
+                    <p>How AI can help you learn:</p>
+                    <ul>
+                        <li>Explain how to use creative software or tools</li>
+                        <li>Demonstrate different artistic or design techniques</li>
+                        <li>Provide tutorials for new skills</li>
+                        <li>Suggest resources for learning creative methods</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Remember:</strong> The goal is to learn techniques you'll then apply yourself. AI should be teaching you, not doing the creative work for you.
+                    </div>
+                `
+            },
+            result_no_create: {
+                type: "no",
+                title: "❌ No - Create Your Own Work",
+                content: `
+                    <p><strong>Submitting AI-generated creative work as your own defeats the purpose of creative assignments.</strong></p>
+                    <p>Why original creativity matters:</p>
+                    <ul>
+                        <li>Creative assignments develop your unique voice and perspective</li>
+                        <li>The creative process itself is what you're supposed to be learning</li>
+                        <li>AI-generated work lacks your personal vision and authenticity</li>
+                        <li>Submitting AI's work as yours is dishonest and may violate school policies</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Better approach:</strong> Create your own original work. You can use AI for inspiration, to learn techniques, or to solve technical problems, but the creative vision and execution should be yours.
+                    </div>
+                `
+            },
+            result_yes_tool: {
+                type: "yes",
+                title: "✅ Yes - AI as a Creative Tool",
+                content: `
+                    <p><strong>Using AI as a tool to help implement your own creative vision is appropriate and innovative!</strong></p>
+                    <p>Examples of good AI use in creative work:</p>
+                    <ul>
+                        <li>Using AI to help with technical aspects while you provide creative direction</li>
+                        <li>Having AI help you execute your ideas when you lack certain skills</li>
+                        <li>Using AI-generated elements as one component of a larger original work</li>
+                        <li>Employing AI to handle repetitive tasks so you can focus on creative decisions</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Important:</strong> Document how you used AI, especially if your teacher asks. Be transparent about what AI contributed versus what came from you. Make sure the creative vision is clearly yours.
+                    </div>
+                `
+            },
+            result_yes_feedback: {
+                type: "yes",
+                title: "✅ Yes - AI for Creative Feedback",
+                content: `
+                    <p><strong>Getting feedback from AI on your creative work is a great way to improve and see your work from different perspectives!</strong></p>
+                    <p>How to get good feedback from AI:</p>
+                    <ul>
+                        <li>Ask specific questions about what you want to improve</li>
+                        <li>Request feedback on technical aspects (composition, color, structure, etc.)</li>
+                        <li>Ask AI to identify strengths and areas for development</li>
+                        <li>Use AI feedback as one perspective, not the only one</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Tip:</strong> AI feedback is valuable, but also seek human feedback from teachers, peers, or others in your creative field. Human perspective, emotion, and cultural context matter in creative work!
+                    </div>
+                `
+            },
+            result_maybe_inspiration: {
+                type: "maybe",
+                title: "⚠️ Use as Inspiration, Not Content",
+                content: `
+                    <p><strong>Using AI for inspiration is okay, but you must substantially transform and add your own creative input.</strong></p>
+                    <p>The right balance:</p>
+                    <ul>
+                        <li>AI can suggest ideas or directions you hadn't considered</li>
+                        <li>You should take those ideas and make them entirely your own</li>
+                        <li>Your creative choices, perspective, and execution are what matter</li>
+                        <li>The final work should be substantially different from what AI generated</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Ask yourself:</strong> If AI gave me a starting point, did I transform it enough that it's now genuinely my own work? Can I explain all the creative decisions I made? If yes, you're probably in good shape.
+                    </div>
+                `
+            },
+            result_no_mainly_ai: {
+                type: "no",
+                title: "❌ No - That's Not Your Work",
+                content: `
+                    <p><strong>If the final product is mainly what AI created, you're submitting someone else's work as your own.</strong></p>
+                    <p>Why this doesn't work:</p>
+                    <ul>
+                        <li>The assignment is meant to develop YOUR creative skills and vision</li>
+                        <li>You're not learning if AI is doing the creating for you</li>
+                        <li>This is academically dishonest</li>
+                        <li>You miss out on developing your unique creative voice</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>What to do instead:</strong> Create your own work from scratch. You can use AI to learn techniques, get unstuck on technical problems, or as one small source of inspiration, but the creation itself must be yours.
+                    </div>
+                `
+            },
+            result_yes_practice: {
+                type: "yes",
+                title: "✅ Yes - Great Study Strategy!",
+                content: `
+                    <p><strong>Using AI to create practice questions is an excellent active learning strategy!</strong></p>
+                    <p>How to use AI for practice effectively:</p>
+                    <ul>
+                        <li>Have AI generate practice questions based on your study materials</li>
+                        <li>Answer them yourself without AI's help</li>
+                        <li>Check your answers and ask AI to explain what you got wrong</li>
+                        <li>Ask for increasingly difficult practice problems as you improve</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Pro tip:</strong> This is called "retrieval practice" and it's one of the most effective study methods! You're using AI to help you practice recalling information, which strengthens your memory.
+                    </div>
+                `
+            },
+            result_no_answers: {
+                type: "no",
+                title: "❌ No - That Defeats the Purpose",
+                content: `
+                    <p><strong>Study guides are designed to help you learn by working through questions yourself - getting answers from AI defeats this purpose.</strong></p>
+                    <p>Why this doesn't help you learn:</p>
+                    <ul>
+                        <li>The act of struggling to answer questions is what helps you learn</li>
+                        <li>You're fooling yourself into thinking you know material you haven't actually learned</li>
+                        <li>You won't perform well on tests if you didn't really study</li>
+                        <li>You're missing out on identifying what you need to study more</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Better strategy:</strong> Answer study guide questions yourself first. For questions you can't answer, go back to your notes and materials to find the answer. Use AI only to clarify concepts you genuinely don't understand after trying.
+                    </div>
+                `
+            },
+            result_yes_tutor: {
+                type: "yes",
+                title: "✅ Yes - AI Can Be a Helpful Tutor",
+                content: `
+                    <p><strong>After trying to learn from your class materials first, using AI for additional explanation is a smart study strategy.</strong></p>
+                    <p>How to use AI as a tutor effectively:</p>
+                    <ul>
+                        <li>Explain what you do understand and where you get confused</li>
+                        <li>Ask for explanations in different ways until one clicks for you</li>
+                        <li>Request analogies or examples that help make concepts concrete</li>
+                        <li>Have AI quiz you to test your new understanding</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Remember:</strong> AI is supplementing your learning, not replacing it. Make sure you truly understand concepts, don't just memorize AI's explanations. Test yourself by doing practice problems without help.
+                    </div>
+                `
+            },
+            result_maybe_materials_first: {
+                type: "maybe",
+                title: "⚠️ Try Your Class Materials First",
+                content: `
+                    <p><strong>While AI can explain things well, going straight to AI means you might miss what your teacher specifically wants you to learn.</strong></p>
+                    <p>Why start with class materials:</p>
+                    <ul>
+                        <li>Your teacher's explanations align with how you'll be tested</li>
+                        <li>Class materials use specific terminology and frameworks your teacher expects</li>
+                        <li>Struggling a bit with material first makes AI's explanation more meaningful</li>
+                        <li>You develop better study habits and self-reliance</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Suggested approach:</strong> Try your textbook and notes for at least 15 minutes. If you're still confused, then use AI for a supplementary explanation. This way AI enhances your learning rather than replacing it.
+                    </div>
+                `
+            },
+            result_yes_understand_code: {
+                type: "yes",
+                title: "✅ Yes - Understanding Code Is Important",
+                content: `
+                    <p><strong>Using AI to understand how code works is an excellent learning strategy!</strong></p>
+                    <p>How to use AI to learn coding:</p>
+                    <ul>
+                        <li>Paste code and ask AI to explain what each part does</li>
+                        <li>Ask "why" questions about coding decisions and patterns</li>
+                        <li>Request alternative ways to accomplish the same task</li>
+                        <li>Have AI explain error messages and what they mean</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Best practice:</strong> After AI explains code, try modifying it yourself or writing similar code from scratch. Understanding code by reading is different from being able to write it yourself!
+                    </div>
+                `
+            },
+            result_yes_debug: {
+                type: "yes",
+                title: "✅ Yes - Debugging Help Is Appropriate",
+                content: `
+                    <p><strong>Using AI to help debug code you wrote yourself is a great use of the technology!</strong></p>
+                    <p>How to use AI for debugging effectively:</p>
+                    <ul>
+                        <li>Share your code and error messages with AI</li>
+                        <li>Ask AI to help you understand what's going wrong</li>
+                        <li>Request suggestions for how to fix bugs</li>
+                        <li>Learn why the bug occurred so you can avoid it in the future</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Learning opportunity:</strong> Debugging is a crucial programming skill. Use AI as a resource, but also learn debugging techniques like using print statements, reading error messages carefully, and testing code systematically.
+                    </div>
+                `
+            },
+            result_no_write_code: {
+                type: "no",
+                title: "❌ No - You Need to Learn to Code",
+                content: `
+                    <p><strong>If the purpose of the assignment is to learn coding, having AI write code for you defeats the entire purpose.</strong></p>
+                    <p>Why you should write your own code:</p>
+                    <ul>
+                        <li>You only learn to code by actually coding yourself</li>
+                        <li>You won't understand the code AI writes, making it useless for your learning</li>
+                        <li>You'll struggle on tests and future assignments if you haven't practiced</li>
+                        <li>Coding skills come from solving problems yourself, including struggling</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>The right way:</strong> Write your code yourself. Use AI to explain concepts you don't understand, help debug errors, or understand example code. But the actual coding must be your own work.
+                    </div>
+                `
+            },
+            result_maybe_code_tool: {
+                type: "maybe",
+                title: "⚠️ Depends - Ask Your Teacher",
+                content: `
+                    <p><strong>If coding is just a tool for another purpose, using AI might be acceptable - but check with your teacher first.</strong></p>
+                    <p>Consider these questions:</p>
+                    <ul>
+                        <li>Is the focus of the assignment on coding skills or on the final product?</li>
+                        <li>Are you expected to learn coding as part of this assignment?</li>
+                        <li>Will you need to explain or modify the code yourself?</li>
+                        <li>What did your teacher say about using AI or code generators?</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Best practice:</strong> Even if AI help is allowed, understand the code it generates. You should be able to explain every line and modify it if needed. If you can't, you might need to learn more before using AI assistance.
+                    </div>
+                `
+            },
+            result_yes_learn_code: {
+                type: "yes",
+                title: "✅ Yes - Learning with AI",
+                content: `
+                    <p><strong>Using AI to learn programming concepts and techniques is an excellent use of the technology!</strong></p>
+                    <p>How to learn coding with AI effectively:</p>
+                    <ul>
+                        <li>Ask AI to explain programming concepts in different ways</li>
+                        <li>Request examples that demonstrate specific techniques</li>
+                        <li>Have AI show you different approaches to solving problems</li>
+                        <li>Ask for practice exercises to test your understanding</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>Important:</strong> Learning with AI is great, but make sure you're actually coding yourself. Read AI's examples, understand them, then write your own code from scratch to practice. Don't just copy and paste!
+                    </div>
+                `
+            }
         };
 
-        actions.appendChild(clearBtn);
-        actions.appendChild(delBtn);
+        let currentNode = "start";
+        let history = ["start"];
+        let totalSteps = 0;
 
-        row.appendChild(nameCell);
-        row.appendChild(allowCell);
-        row.appendChild(avoidCell);
-        row.appendChild(actions);
-        dom.matrixBody.appendChild(row);
-      });
-    }
+        function renderQuestion() {
+            const node = decisionTree[currentNode];
+            const questionArea = document.getElementById("questionArea");
+            const resultArea = document.getElementById("resultArea");
+            
+            resultArea.innerHTML = "";
+            resultArea.classList.remove("active");
 
-    function renderChipsInto(container, assignment, column){
-      container.innerHTML = '';
-      const ids = assignment[column];
-      if(!ids.length){
-        const hint = document.createElement('div');
-        hint.className = 'hint';
-        hint.textContent = 'Drag practices here';
-        container.appendChild(hint);
-      }
-      ids.forEach(id => {
-        const p = practices.find(x => x.id === id);
-        if(!p) return;
-        const chip = makeChip(p.label, () => {
-          assignment[column] = assignment[column].filter(x => x !== id);
-          renderMatrix();
-        });
-        chip.draggable = true;
-        chip.id = `chip_${assignment.id}_${column}_${id}`;
-        chip.addEventListener('dragstart', e => onDragStartChip(e, assignment.id, column, id));
-        container.appendChild(chip);
-      });
-    }
-
-    // ---- Drag & Drop ----
-    function onDragStartPalette(e){
-      const practiceId = e.target.dataset.practiceId;
-      e.dataTransfer.setData('text/plain', JSON.stringify({ type:'palette', practiceId }));
-    }
-
-    function onDragStartChip(e, assignmentId, column, practiceId){
-      e.dataTransfer.setData('text/plain', JSON.stringify({ type:'chip', assignmentId, column, practiceId }));
-    }
-
-    function onDragOver(e){
-      e.preventDefault();
-      e.currentTarget.classList.add('dragover');
-    }
-
-    function onDragLeave(e){
-      e.currentTarget.classList.remove('dragover');
-    }
-
-    function onDrop(e, assignmentId, column){
-      e.preventDefault();
-      e.currentTarget.classList.remove('dragover');
-      try{
-        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-        if(data.type === 'palette'){
-          const pId = data.practiceId;
-          assignments = assignments.map(a => {
-            if(a.id !== assignmentId) return a;
-            const other = column === 'allow' ? 'avoid' : 'allow';
-            if(a[column].includes(pId)) return a;
-            return { ...a, [column]: [...a[column], pId], [other]: a[other].filter(x => x !== pId) };
-          });
-          markEdited();
-          renderMatrix();
-        } else if(data.type === 'chip'){
-          const { assignmentId: fromA, column: fromC, practiceId: pId } = data;
-          if(fromA === assignmentId && fromC === column) return;
-          assignments = assignments.map(a => {
-            if(a.id === fromA) a = { ...a, [fromC]: a[fromC].filter(x => x !== pId) };
-            if(a.id === assignmentId){
-              const other = column === 'allow' ? 'avoid' : 'allow';
-              const set = new Set(a[column]);
-              set.add(pId);
-              a = { ...a, [column]: Array.from(set), [other]: a[other].filter(x => x !== pId) };
+            if (node) {
+                questionArea.innerHTML = `
+                    <div class="question-container active">
+                        <div class="question">${node.question}</div>
+                        <div class="options">
+                            ${node.options.map((option, index) => `
+                                <button class="option-btn" onclick="selectOption('${option.next}')">
+                                    ${option.text}
+                                </button>
+                            `).join('')}
+                        </div>
+                        ${history.length > 1 ? '<button class="back-btn" onclick="goBack()">← Back</button>' : ''}
+                    </div>
+                `;
+                updateProgress();
             }
-            return a;
-          });
-          markEdited();
-          renderMatrix();
         }
-      }catch(err){ /* ignore */ }
-    }
 
-    // Auto-scroll while dragging near viewport edges
-    function onGlobalDragOver(e){
-      const threshold = 60;
-      const speed = 14;
-      if(e.clientY < threshold){
-        window.scrollBy({ top: -speed, behavior: 'auto' });
-      } else if(e.clientY > window.innerHeight - threshold){
-        window.scrollBy({ top: speed, behavior: 'auto' });
-      }
-    }
+        function selectOption(nextNode) {
+            history.push(nextNode);
+            
+            if (nextNode.startsWith("result_")) {
+                showResult(nextNode);
+            } else {
+                currentNode = nextNode;
+                renderQuestion();
+            }
+        }
 
-    document.addEventListener('dragover', onGlobalDragOver);
+        function showResult(resultKey) {
+            const result = results[resultKey];
+            const questionArea = document.getElementById("questionArea");
+            const resultArea = document.getElementById("resultArea");
+            
+            questionArea.innerHTML = "";
+            
+            resultArea.innerHTML = `
+                <div class="result ${result.type} active">
+                    <h2>${result.title}</h2>
+                    ${result.content}
+                    <button class="restart-btn" onclick="restart()">Start Over</button>
+                </div>
+            `;
+            
+            updateProgress(100);
+        }
 
-    // ---- Practice Actions ----
-    function addPractice(){
-      const label = dom.newPractice.value.trim();
-      if(!label) return;
-      if(practices.some(p => p.label.toLowerCase() === label.toLowerCase())){
-        showToast('This practice already exists');
-        return;
-      }
-      practices.push({ id: uid('prc'), label });
-      dom.newPractice.value = '';
-      dom.newPractice.focus();
-      markEdited();
-      renderPalette();
-    }
+        function goBack() {
+            if (history.length > 1) {
+                history.pop();
+                currentNode = history[history.length - 1];
+                renderQuestion();
+            }
+        }
 
-    dom.addPracticeBtn.onclick = addPractice;
-    dom.newPractice.addEventListener('keydown', e => { if(e.key === 'Enter') addPractice(); });
+        function restart() {
+            currentNode = "start";
+            history = ["start"];
+            renderQuestion();
+        }
 
-    // ---- Assignment Actions ----
-    function addAssignment(){
-      const name = dom.newAssignment.value.trim();
-      if(!name) return;
-      assignments.push({ id: uid('asg'), name, allow: [], avoid: [] });
-      dom.newAssignment.value = '';
-      dom.newAssignment.focus();
-      markEdited();
-      renderMatrix();
-    }
+        function updateProgress(override = null) {
+            const progressFill = document.getElementById("progressFill");
+            let percentage;
+            
+            if (override !== null) {
+                percentage = override;
+            } else {
+                percentage = Math.min((history.length / 5) * 100, 90);
+            }
+            
+            progressFill.style.width = percentage + "%";
+        }
 
-    dom.addAssignmentBtn.onclick = addAssignment;
-    dom.newAssignment.addEventListener('keydown', e => { if(e.key === 'Enter') addAssignment(); });
-
-    // ---- CSV Export ----
-    dom.csvBtn.onclick = () => {
-      const rows = [];
-      
-      // Metadata rows
-      rows.push(['Level', meta.level]);
-      rows.push(['Scope', meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher')]);
-      let scopeValue = '';
-      if(meta.scope === 'department'){
-        scopeValue = meta.department;
-      } else if(meta.scope === 'course'){
-        scopeValue = meta.courseName;
-      } else if(meta.scope === 'teacher'){
-        scopeValue = meta.teacherName;
-      }
-      const scopeLabel = meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher');
-      rows.push([scopeLabel, scopeValue]);
-      if(meta.grades.length > 0){
-        rows.push(['Grades', meta.grades.join(', ')]);
-      }
-      rows.push([]); // Blank row for spacing
-      
-      // Header row
-      rows.push(['Assignment Type', 'Can use AI', 'Must avoid AI']);
-      
-      // Get practice labels by ID
-      const labelById = id => (practices.find(p => p.id === id) || { label: '' }).label;
-      
-      // Data rows
-      assignments.forEach(a => {
-        const allowLabels = a.allow.map(labelById).sort().join('; ');
-        const avoidLabels = a.avoid.map(labelById).sort().join('; ');
-        rows.push([a.name, allowLabels, avoidLabels]);
-      });
-      
-      // Convert to CSV
-      const csv = rows.map(row => 
-        row.map(cell => 
-          // Escape quotes and wrap in quotes if contains comma or newline
-          `"${cell.replace(/"/g, '""')}"`
-        ).join(',')
-      ).join('\n');
-      
-      // Download
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'ai-practices-matrix.csv';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      
-      // Mark as exported
-      markExported();
-    };
-
-    dom.resetBtn.onclick = () => {
-      confirm2('Reset to defaults?', () => {
-        location.reload();
-      });
-    };
-
-    // ---- PDF export ----
-    dom.pdfBtn.onclick = async () => {
-      const { jsPDF } = window.jspdf;
-      const exportRoot = document.createElement('div');
-      exportRoot.style.padding = '16px';
-      exportRoot.style.background = '#ffffff';
-      exportRoot.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-      exportRoot.style.color = '#111827';
-      exportRoot.style.maxWidth = '1200px';
-
-      const cap = document.createElement('div');
-      const gradeText = meta.grades.length > 0 ? ' • Grades: ' + meta.grades.join(', ') : '';
-      let scopeValue = '';
-      if(meta.scope === 'department'){
-        scopeValue = meta.department;
-      } else if(meta.scope === 'course'){
-        scopeValue = meta.courseName || '—';
-      } else if(meta.scope === 'teacher'){
-        scopeValue = meta.teacherName || '—';
-      }
-      const scopeLabel = meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher');
-      cap.textContent = `${meta.level} • ${scopeLabel}: ${scopeValue}${gradeText}`;
-      cap.style.fontWeight = '700';
-      cap.style.margin = '0 0 8px';
-      exportRoot.appendChild(cap);
-
-      const head = document.createElement('div');
-      head.style.display = 'grid';
-      head.style.gridTemplateColumns = '3fr 4fr 4fr';
-      head.style.gap = '10px';
-      head.style.color = '#6b7280';
-      head.style.fontSize = '12px';
-      head.style.fontWeight = '700';
-      head.style.margin = '6px 0 8px';
-      ['Assignment type', 'Can use AI', 'Must avoid AI'].forEach(t => {
-        const d = document.createElement('div');
-        d.textContent = t;
-        head.appendChild(d);
-      });
-      exportRoot.appendChild(head);
-
-      const labelById = id => (practices.find(p => p.id === id) || { label: '' }).label;
-      const sortLabels = ids => ids.map(labelById).filter(Boolean).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-
-      const chipStyle = 'display:inline-block;margin:2px 6px 2px 0;padding:4px 8px;border:1px solid #e5e7eb;border-radius:999px;font-size:11px;line-height:1.2;';
-
-      assignments.forEach(a => {
-        const row = document.createElement('div');
-        row.style.display = 'grid';
-        row.style.gridTemplateColumns = '3fr 4fr 4fr';
-        row.style.gap = '10px';
-        row.style.marginBottom = '8px';
-
-        const name = document.createElement('div');
-        name.textContent = a.name;
-        name.style.fontWeight = '600';
-        name.style.padding = '6px 8px';
-        name.style.border = '1px solid #e5e7eb';
-        name.style.borderRadius = '10px';
-        row.appendChild(name);
-
-        const allow = document.createElement('div');
-        allow.style.border = '1px solid #e5e7eb';
-        allow.style.borderRadius = '10px';
-        allow.style.minHeight = '36px';
-        allow.style.padding = '6px 8px';
-        sortLabels(a.allow).forEach(lbl => {
-          const s = document.createElement('span');
-          s.setAttribute('style', chipStyle);
-          s.textContent = lbl;
-          allow.appendChild(s);
-        });
-        row.appendChild(allow);
-
-        const avoid = document.createElement('div');
-        avoid.style.border = '1px solid #e5e7eb';
-        avoid.style.borderRadius = '10px';
-        avoid.style.minHeight = '36px';
-        avoid.style.padding = '6px 8px';
-        sortLabels(a.avoid).forEach(lbl => {
-          const s = document.createElement('span');
-          s.setAttribute('style', chipStyle);
-          s.textContent = lbl;
-          avoid.appendChild(s);
-        });
-        row.appendChild(avoid);
-
-        exportRoot.appendChild(row);
-      });
-
-      exportRoot.style.position = 'fixed';
-      exportRoot.style.left = '-99999px';
-      exportRoot.style.top = '0';
-      document.body.appendChild(exportRoot);
-
-      const canvas = await html2canvas(exportRoot, { scale: 2, backgroundColor: '#ffffff' });
-
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-      const pw = pdf.internal.pageSize.getWidth();
-      const ph = pdf.internal.pageSize.getHeight();
-      const margin = 20;
-      const maxW = pw - margin * 2;
-      const maxH = ph - margin * 2;
-      const ratioW = maxW / canvas.width;
-      const ratioH = maxH / canvas.height;
-      const ratio = Math.min(ratioW, ratioH);
-      const imgW = canvas.width * ratio;
-      const imgH = canvas.height * ratio;
-      const x = (pw - imgW) / 2;
-      const y = (ph - imgH) / 2;
-      const img = canvas.toDataURL('image/png');
-      pdf.addImage(img, 'PNG', x, y, imgW, imgH);
-      pdf.save('AI_Practices_Matrix.pdf');
-
-      document.body.removeChild(exportRoot);
-      
-      // Mark as exported
-      markExported();
-    };
-
-    // ---- Warn on unsaved changes before leaving ----
-    window.addEventListener('beforeunload', e => {
-      if(edited){
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    });
-
-    // ---- Initial render ----
-    function boot(){
-      applyHeaderToControls();
-      renderDepartmentOptions();
-      renderGradeCheckboxes();
-      renderPalette();
-      renderMatrix();
-      renderHeaderSummary();
-    }
-
-    boot();
-  })();
-  </script>
+        // Initialize
+        renderQuestion();
+    </script>
 </body>
 </html>
