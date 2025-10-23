@@ -14,7 +14,7 @@
     .pad{padding:16px}
     h1{font-size:24px;margin:0 0 4px} p.muted{color:var(--muted);margin:0 0 12px}
     .controls{display:flex;flex-wrap:wrap;gap:8px}
-    .btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:10px 14px;font-size:14px;cursor:pointer;transition:all 0.15s}
+    .btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:7px 10px;margin:2px 0;font-size:14px;cursor:pointer;transition:all 0.15s}
     .btn:hover{background:#f9fafb} .btn:active{transform:translateY(1px)} .btn.primary{background:var(--primary);color:#fff;border-color:#1d4ed8}
     .btn.primary:hover{background:#1d4ed8} .btn.danger{background:#ef4444;color:#fff;border-color:#dc2626}
     .input{padding:10px 12px;border:1px solid var(--border);border-radius:12px;width:100%}
@@ -41,11 +41,15 @@
     .hidden{display:none}
     .header-grid{display:grid;gap:12px;grid-template-columns:1fr}
     @media (min-width: 900px){.header-grid{grid-template-columns:1fr 1fr 1fr}}
+    .checkbox-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+    @media (min-width: 600px){.checkbox-grid{grid-template-columns:repeat(4,1fr)}}
     .summary{color:#111827;font-weight:600;font-size:14px}
     .toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:12px 16px;border-radius:8px;z-index:9999;animation:slideIn 0.3s ease-out}
     @keyframes slideIn{from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1}}
     .unsaved-indicator{display:inline-flex;align-items:center;gap:6px;color:#ef4444;font-size:13px;font-weight:500}
     .unsaved-indicator::before{content:'●';font-size:8px}
+    .saved-indicator{display:inline-flex;align-items:center;gap:6px;color:#10b981;font-size:13px;font-weight:500}
+    .saved-indicator::before{content:'●';font-size:8px}
     .section-divider{height:1px;background:var(--border);margin:24px 0}
     .action-row{display:flex;gap:8px;flex-wrap:wrap}
     @media (max-width: 600px){.action-row{flex-direction:column}}
@@ -59,7 +63,7 @@
       <div style="flex:1">
         <h1>AI Use Matrix Builder</h1>
         <p class="muted" style="margin-bottom:4px">Create a clear, shareable policy for when student can use AI for your assignments. Export for a shareable document - it does not save online.</p>
-        <div id="unsavedIndicator" class="hidden unsaved-indicator">Unsaved changes</div>
+        <div id="unsavedIndicator" class="hidden unsaved-indicator">Changes not exported</div>
       </div>
       <div class="controls">
         <button id="pdfBtn" class="btn primary">Export PDF</button>
@@ -99,27 +103,29 @@
             <div class="flex" role="group" aria-label="Scope">
               <label class="flex" style="gap:6px"><input type="radio" name="scope" value="department" checked> <span>Department</span></label>
               <label class="flex" style="gap:6px"><input type="radio" name="scope" value="course"> <span>Course</span></label>
+              <label class="flex" style="gap:6px"><input type="radio" name="scope" value="teacher"> <span>Teacher</span></label>
             </div>
           </div>
           <div>
             <div id="deptWrap">
               <div class="muted" style="margin-bottom:4px;font-size:12px">Department</div>
               <select id="deptSelect" class="select">
-                <option>Arts</option>
-                <option>Computer Studies</option>
-                <option>English</option>
-                <option>Language</option>
-                <option>Math</option>
-                <option>Science</option>
-                <option>Social Studies</option>
-                <option>Theology</option>
+                <!-- Options will be populated dynamically based on level -->
               </select>
             </div>
             <div id="courseWrap" class="hidden">
               <div class="muted" style="margin-bottom:4px;font-size:12px">Course name</div>
               <input id="courseInput" class="input" placeholder="e.g., AP US History" />
             </div>
+            <div id="teacherWrap" class="hidden">
+              <div class="muted" style="margin-bottom:4px;font-size:12px">Teacher name</div>
+              <input id="teacherInput" class="input" placeholder="e.g., Ms. Smith" />
+            </div>
           </div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="muted" style="margin-bottom:4px;font-size:12px">Grade Levels</div>
+          <div id="gradeCheckboxes" class="checkbox-grid"></div>
         </div>
         <div id="hdrSummary" class="summary" style="margin-top:12px"></div>
       </section>
@@ -165,18 +171,38 @@
     const uid = (p='id') => p + '_' + Math.random().toString(36).slice(2,9);
 
     // ---- META (Header state) ----
-    let meta = { level: 'Middle School', scope: 'department', department: 'English', courseName: '' };
+    let meta = { level: 'Middle School', scope: 'department', department: 'English', courseName: '', teacherName: '', grades: [] };
 
-    // ---- Department default assignments ----
+    // ---- Department lists by level ----
+    const departmentsByLevel = {
+      'Middle School': ['Computer Studies', 'English', 'Fine Arts', 'Mathematics', 'Science', 'Social Studies', 'Theology', 'World Languages'],
+      'Upper School': ['Computer Studies', 'Elective', 'English', 'Fine Arts', 'Mathematics', 'Research Paper', 'Science', 'Social Studies', 'Theology', 'World Languages']
+    };
+
+    // ---- Department default assignments by level and department ----
     const deptDefaults = {
-      'English': ['Analytical essay','Literary analysis','Poetry explication','Research paper','Presentation / speech'],
-      'Math': ['Problem set','Proof write-up','Modeling project','Data analysis report','Presentation / speech'],
-      'Science': ['Lab report','Research poster','Field notes summary','Design investigation','Presentation / speech'],
-      'Social Studies': ['DBQ essay','Primary source analysis','Position paper','Research project','Presentation / speech'],
-      'Theology': ['Reflection essay','Textual analysis','Socratic seminar prep','Research project','Presentation / speech'],
-      'Language': ['Composition','Translation exercise','Oral presentation','Reading journal','Cultural project'],
-      'Arts': ['Artist statement','Portfolio reflection','Project proposal','Critique write-up','Presentation / speech'],
-      'Computer Studies': ['Programming task','UI/UX design brief','Algorithm design write-up','Robotics build log','Engineering design report']
+      'Middle School': {
+        'Computer Studies': ['Programming task','UI/UX design brief','Algorithm design write-up','Robotics build log','Engineering design report'],
+        'English': ['Analytical essay','Literary analysis','Poetry explication','Research paper','Presentation / speech'],
+        'Fine Arts': ['Artist statement','Portfolio reflection','Project proposal','Critique write-up','Presentation / speech'],
+        'Mathematics': ['Problem set','Proof write-up','Modeling project','Data analysis report','Presentation / speech'],
+        'Science': ['Lab report','Research poster','Field notes summary','Design investigation','Presentation / speech'],
+        'Social Studies': ['DBQ essay','Primary source analysis','Position paper','Research project','Presentation / speech'],
+        'Theology': ['Reflection essay','Textual analysis','Socratic seminar prep','Research project','Presentation / speech'],
+        'World Languages': ['Composition','Translation exercise','Oral presentation','Reading journal','Cultural project']
+      },
+      'Upper School': {
+        'Computer Studies': ['Programming task','Algorithm analysis','Software design document','Technical presentation','Code review report'],
+        'Elective': ['Project proposal','Research paper','Creative project','Presentation / speech','Reflection essay'],
+        'English': ['Analytical essay','Literary analysis','Research paper','Critical review','Presentation / speech'],
+        'Fine Arts': ['Artist statement','Portfolio reflection','Art critique','Exhibition proposal','Presentation / speech'],
+        'Mathematics': ['Problem set','Proof write-up','Mathematical modeling','Data analysis','Presentation / speech'],
+        'Research Paper': ['Topic proposal','Annotated bibliography','Literature review','Research draft','Final paper'],
+        'Science': ['Lab report','Research proposal','Scientific poster','Data analysis','Presentation / speech'],
+        'Social Studies': ['DBQ essay','Historical analysis','Position paper','Research project','Presentation / speech'],
+        'Theology': ['Theological reflection','Textual exegesis','Comparative analysis','Research project','Presentation / speech'],
+        'World Languages': ['Composition','Translation exercise','Oral presentation','Cultural analysis','Interpretive essay']
+      }
     };
 
     // ---- Practices ----
@@ -185,11 +211,12 @@
       'Pseudocode drafting','Debugging guidance','Wireframing','Prototype feedback','Accessibility check','Safety checklist','Image/Graphic generation', 'Image/Graphic editting'
     ].map(label => ({ id: uid('prc'), label }));
 
-    // ---- Assignments (start with English defaults) ----
-    let assignments = deptDefaults[meta.department].map(name => ({ id: uid('asg'), name, allow: [], avoid: [] }));
+    // ---- Assignments (start with Middle School English defaults) ----
+    let assignments = deptDefaults[meta.level][meta.department].map(name => ({ id: uid('asg'), name, allow: [], avoid: [] }));
 
     // ---- Dirty tracking ----
     let edited = false;
+    let everExported = false; // Track if user has ever exported
     let summaryTimeout;
 
     // ---- DOM refs ----
@@ -211,8 +238,11 @@
       deptSelect: document.getElementById('deptSelect'),
       courseWrap: document.getElementById('courseWrap'),
       courseInput: document.getElementById('courseInput'),
+      teacherWrap: document.getElementById('teacherWrap'),
+      teacherInput: document.getElementById('teacherInput'),
       hdrSummary: document.getElementById('hdrSummary'),
-      unsavedIndicator: document.getElementById('unsavedIndicator')
+      unsavedIndicator: document.getElementById('unsavedIndicator'),
+      gradeCheckboxes: document.getElementById('gradeCheckboxes')
     };
 
     // ---- Utilities ----
@@ -226,6 +256,12 @@
 
     function updateUnsavedIndicator(){
       if(edited){
+        dom.unsavedIndicator.className = 'unsaved-indicator';
+        dom.unsavedIndicator.textContent = 'Changes not exported';
+        dom.unsavedIndicator.classList.remove('hidden');
+      } else if(everExported){
+        dom.unsavedIndicator.className = 'saved-indicator';
+        dom.unsavedIndicator.textContent = 'Changes exported';
         dom.unsavedIndicator.classList.remove('hidden');
       } else {
         dom.unsavedIndicator.classList.add('hidden');
@@ -236,6 +272,12 @@
       edited = true;
       updateUnsavedIndicator();
     }
+    
+    function markExported(){
+      edited = false;
+      everExported = true;
+      updateUnsavedIndicator();
+    }
 
     function confirm2(title, onConfirm){
       const ok = confirm(title);
@@ -244,19 +286,93 @@
     }
 
     // ---- Header wiring ----
+    function renderDepartmentOptions(){
+      const departments = departmentsByLevel[meta.level];
+      dom.deptSelect.innerHTML = '';
+      
+      departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept;
+        option.textContent = dept;
+        option.selected = (dept === meta.department);
+        dom.deptSelect.appendChild(option);
+      });
+      
+      // If current department is not in the new level's list, select the first one
+      if(!departments.includes(meta.department)){
+        meta.department = departments[0];
+        dom.deptSelect.value = meta.department;
+      }
+    }
+    
+    function renderGradeCheckboxes(){
+      const grades = meta.level === 'Middle School' 
+        ? ['Grade 5', 'Grade 6', 'Grade 7', 'Grade 8']
+        : ['Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+      
+      dom.gradeCheckboxes.innerHTML = '';
+      
+      grades.forEach(grade => {
+        const label = document.createElement('label');
+        label.className = 'flex';
+        label.style.gap = '6px';
+        label.style.fontSize = '14px';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'grade';
+        checkbox.value = grade;
+        checkbox.checked = meta.grades.includes(grade);
+        
+        checkbox.addEventListener('change', e => {
+          if(e.target.checked){
+            if(!meta.grades.includes(grade)){
+              meta.grades.push(grade);
+            }
+          } else {
+            meta.grades = meta.grades.filter(g => g !== grade);
+          }
+          markEdited();
+          renderHeaderSummary();
+        });
+        
+        const span = document.createElement('span');
+        span.textContent = grade;
+        
+        label.appendChild(checkbox);
+        label.appendChild(span);
+        dom.gradeCheckboxes.appendChild(label);
+      });
+    }
+    
     function updateHeaderVisibility(){
       if(meta.scope === 'department'){
         dom.deptWrap.classList.remove('hidden');
         dom.courseWrap.classList.add('hidden');
-      } else {
+        dom.teacherWrap.classList.add('hidden');
+      } else if(meta.scope === 'course'){
         dom.deptWrap.classList.add('hidden');
         dom.courseWrap.classList.remove('hidden');
+        dom.teacherWrap.classList.add('hidden');
+      } else if(meta.scope === 'teacher'){
+        dom.deptWrap.classList.add('hidden');
+        dom.courseWrap.classList.add('hidden');
+        dom.teacherWrap.classList.remove('hidden');
       }
     }
 
     function headerSummaryText(){
-      const right = meta.scope === 'department' ? meta.department : meta.courseName || '—';
-      return `${meta.level} • ${meta.scope === 'department' ? 'Department' : 'Course'}: ${right}`;
+      let right = '';
+      if(meta.scope === 'department'){
+        right = meta.department;
+      } else if(meta.scope === 'course'){
+        right = meta.courseName || '—';
+      } else if(meta.scope === 'teacher'){
+        right = meta.teacherName || '—';
+      }
+      const scopeLabel = meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher');
+      const gradeText = meta.grades.length > 0 ? ' • Grades: ' + meta.grades.join(', ') : '';
+      return `${meta.level} • ${scopeLabel}: ${right}${gradeText}`;
     }
 
     function renderHeaderSummary(){
@@ -265,8 +381,31 @@
 
     dom.levelRadios.forEach(r => r.addEventListener('change', e => {
       if(e.target.checked){
+        const oldLevel = meta.level;
         meta.level = e.target.value;
+        meta.grades = []; // Clear grades when level changes
+        
+        // Update department dropdown
+        renderDepartmentOptions();
+        
+        // Check if we should load new defaults for the department
+        const oldDept = meta.department;
+        const newDeptList = departmentsByLevel[meta.level];
+        
+        // If the department exists in new level, ask if they want to reload defaults
+        if(newDeptList.includes(oldDept)){
+          confirm2(`Level changed to ${meta.level}. Load default assignments for ${meta.department} at this level?`, () => {
+            loadDeptDefaults('replace');
+          });
+        } else {
+          // Department doesn't exist in new level, auto-load the first department's defaults
+          confirm2(`Level changed to ${meta.level}. Load default assignments for ${meta.department}?`, () => {
+            loadDeptDefaults('replace');
+          });
+        }
+        
         markEdited();
+        renderGradeCheckboxes();
         renderHeaderSummary();
       }
     }));
@@ -300,17 +439,27 @@
       }, 150);
     });
 
+    dom.teacherInput.addEventListener('input', e => {
+      clearTimeout(summaryTimeout);
+      summaryTimeout = setTimeout(() => {
+        meta.teacherName = e.target.value;
+        markEdited();
+        renderHeaderSummary();
+      }, 150);
+    });
+
     function applyHeaderToControls(){
       dom.levelRadios.forEach(r => r.checked = (r.value === meta.level));
       dom.scopeRadios.forEach(r => r.checked = (r.value === meta.scope));
       dom.deptSelect.value = meta.department;
       dom.courseInput.value = meta.courseName;
+      dom.teacherInput.value = meta.teacherName;
       updateHeaderVisibility();
       renderHeaderSummary();
     }
 
     function loadDeptDefaults(mode='replace'){
-      const names = deptDefaults[meta.department] || [];
+      const names = (deptDefaults[meta.level] && deptDefaults[meta.level][meta.department]) || [];
       const rows = names.map(name => ({ id: uid('asg'), name, allow: [], avoid: [] }));
       if(mode === 'replace') assignments = rows;
       else assignments = [...assignments, ...rows];
@@ -570,9 +719,20 @@
       
       // Metadata rows
       rows.push(['Level', meta.level]);
-      rows.push(['Scope', meta.scope === 'department' ? 'Department' : 'Course']);
-      const scopeValue = meta.scope === 'department' ? meta.department : meta.courseName;
-      rows.push([meta.scope === 'department' ? 'Department' : 'Course', scopeValue]);
+      rows.push(['Scope', meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher')]);
+      let scopeValue = '';
+      if(meta.scope === 'department'){
+        scopeValue = meta.department;
+      } else if(meta.scope === 'course'){
+        scopeValue = meta.courseName;
+      } else if(meta.scope === 'teacher'){
+        scopeValue = meta.teacherName;
+      }
+      const scopeLabel = meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher');
+      rows.push([scopeLabel, scopeValue]);
+      if(meta.grades.length > 0){
+        rows.push(['Grades', meta.grades.join(', ')]);
+      }
       rows.push([]); // Blank row for spacing
       
       // Header row
@@ -606,6 +766,9 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      
+      // Mark as exported
+      markExported();
     };
 
     dom.resetBtn.onclick = () => {
@@ -625,7 +788,17 @@
       exportRoot.style.maxWidth = '1200px';
 
       const cap = document.createElement('div');
-      cap.textContent = `${meta.level} • ${meta.scope === 'department' ? 'Department' : 'Course'}: ${meta.scope === 'department' ? meta.department : (meta.courseName || '—')}`;
+      const gradeText = meta.grades.length > 0 ? ' • Grades: ' + meta.grades.join(', ') : '';
+      let scopeValue = '';
+      if(meta.scope === 'department'){
+        scopeValue = meta.department;
+      } else if(meta.scope === 'course'){
+        scopeValue = meta.courseName || '—';
+      } else if(meta.scope === 'teacher'){
+        scopeValue = meta.teacherName || '—';
+      }
+      const scopeLabel = meta.scope === 'department' ? 'Department' : (meta.scope === 'course' ? 'Course' : 'Teacher');
+      cap.textContent = `${meta.level} • ${scopeLabel}: ${scopeValue}${gradeText}`;
       cap.style.fontWeight = '700';
       cap.style.margin = '0 0 8px';
       exportRoot.appendChild(cap);
@@ -719,6 +892,9 @@
       pdf.save('AI_Practices_Matrix.pdf');
 
       document.body.removeChild(exportRoot);
+      
+      // Mark as exported
+      markExported();
     };
 
     // ---- Warn on unsaved changes before leaving ----
@@ -732,6 +908,8 @@
     // ---- Initial render ----
     function boot(){
       applyHeaderToControls();
+      renderDepartmentOptions();
+      renderGradeCheckboxes();
       renderPalette();
       renderMatrix();
       renderHeaderSummary();
